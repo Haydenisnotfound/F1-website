@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 PULSE — 2026 Live Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ════════════════════════════════
+       NAVIGATION
+  ════════════════════════════════ -->
+  <nav>
+    <a href="#home" class="nav-logo">
+      F1<span>PULSE</span><span class="logo-badge">2026</span>
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#drivers">Drivers</a></li>
+      <li><a href="#teams">Teams</a></li>
+      <li><a href="#schedule">Schedule</a></li>
+      <li><a href="#standings">Standings</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="nav-live">
+        <div class="live-dot"></div>
+        <span>Live Season</span>
+      </div>
+      <button class="hamburger" id="ham" aria-label="Toggle navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════
+       HERO
+  ════════════════════════════════ -->
+  <div class="hero" id="home">
+    <div class="hero-video-bg"></div>
+    <div class="hero-stripe"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">// Formula One 2026 · New Era · New Champions</div>
+      <h1 class="hero-title">Race<br>To <em>Glory</em></h1>
+      <p class="hero-sub">
+        Live driver standings, race weekend results, circuit visuals and real-time
+        countdown — all powered by the Jolpica F1 API.
+      </p>
+      <div class="hero-stats">
+        <div class="h-stat">
+          <span class="h-stat-n" id="hs-drivers">—</span>
+          <span class="h-stat-l">Drivers</span>
+        </div>
+        <div class="h-stat">
+          <span class="h-stat-n" id="hs-teams">—</span>
+          <span class="h-stat-l">Teams</span>
+        </div>
+        <div class="h-stat">
+          <span class="h-stat-n" id="hs-races">—</span>
+          <span class="h-stat-l">Races</span>
+        </div>
+        <div class="h-stat">
+          <span class="h-stat-n" id="hs-done">—</span>
+          <span class="h-stat-l">Completed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       NEXT RACE COUNTDOWN BAR
+  ════════════════════════════════ -->
+  <div id="next-race-bar">
+    <div class="nrb-inner">
+      <div class="nrb-info">
+        <div class="nrb-tag">// Next Race</div>
+        <div class="nrb-name" id="nrb-name">Loading…</div>
+        <div class="nrb-meta" id="nrb-meta"></div>
+      </div>
+      <div class="nrb-timer">
+        <div class="cd-unit">
+          <span class="cd-num" id="cd-d">--</span>
+          <span class="cd-lbl">Days</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <span class="cd-num" id="cd-h">--</span>
+          <span class="cd-lbl">Hrs</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <span class="cd-num" id="cd-m">--</span>
+          <span class="cd-lbl">Min</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <span class="cd-num" id="cd-s">--</span>
+          <span class="cd-lbl">Sec</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════
+       01 · DRIVERS
+  ════════════════════════════════ -->
+  <section id="drivers">
+    <div class="wrap" style="padding-bottom: 0;">
+      <div class="sec-head">
+        <div>
+          <div class="sec-tag">// 01 — Driver Roster</div>
+          <h2 class="sec-title">The 2026 Grid</h2>
+        </div>
+        <div class="controls">
+          <input class="s-box" type="text" id="drv-search" placeholder="Search driver or team…">
+          <select class="f-sel" id="team-filter"><option value="">All Teams</option></select>
+          <select class="f-sel" id="nat-filter"><option value="">All Nations</option></select>
+        </div>
+      </div>
+
+      <!-- Skeleton placeholders shown until data loads -->
+      <div class="drivers-grid" id="drivers-grid">
+        <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w50"></div><div class="sk-line w40"></div></div></div>
+        <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w50"></div><div class="sk-line w40"></div></div></div>
+        <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w50"></div><div class="sk-line w40"></div></div></div>
+        <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w50"></div><div class="sk-line w40"></div></div></div>
+        <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w50"></div><div class="sk-line w40"></div></div></div>
+        <div class="skeleton-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w50"></div><div class="sk-line w40"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════
+       02 · TEAMS
+  ════════════════════════════════ -->
+  <section id="teams">
+    <div class="wrap" style="padding-bottom: 0;">
+      <div class="sec-head">
+        <div>
+          <div class="sec-tag">// 02 — Constructor Paddock</div>
+          <h2 class="sec-title">The Teams</h2>
+        </div>
+      </div>
+      <div class="teams-grid" id="teams-grid">
+        <div class="skeleton-card" style="height: 200px;"></div>
+        <div class="skeleton-card" style="height: 200px;"></div>
+        <div class="skeleton-card" style="height: 200px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════
+       03 · SCHEDULE
+  ════════════════════════════════ -->
+  <section id="schedule">
+    <div class="wrap" style="padding-bottom: 0;">
+      <div class="sec-head">
+        <div>
+          <div class="sec-tag">// 03 — Race Calendar</div>
+          <h2 class="sec-title">2026 Season</h2>
+        </div>
+        <span style="font-family: var(--fm); font-size: .65rem; color: var(--dim); letter-spacing: .08em;">
+          🖱 Click any race for weekend data
+        </span>
+      </div>
+      <div class="schedule-grid" id="schedule-grid">
+        <div class="skeleton-card" style="height: 230px;"></div>
+        <div class="skeleton-card" style="height: 230px;"></div>
+        <div class="skeleton-card" style="height: 230px;"></div>
+        <div class="skeleton-card" style="height: 230px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════
+       04 · STANDINGS
+  ════════════════════════════════ -->
+  <section id="standings">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-tag">// 04 — Championship</div>
+          <h2 class="sec-title">Standings</h2>
+        </div>
+      </div>
+
+      <div class="standings-wrap">
+        <!-- Driver Championship -->
+        <div>
+          <div class="st-title">
+            Drivers
+            <span class="st-live-dot" id="st-drv-live"></span>
+          </div>
+          <div class="st-table" id="drv-standings">
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+          </div>
+          <div class="st-src" id="st-drv-src"></div>
+        </div>
+
+        <!-- Constructor Championship -->
+        <div>
+          <div class="st-title">
+            Constructors
+            <span class="st-live-dot" id="st-con-live"></span>
+          </div>
+          <div class="st-table" id="con-standings">
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+          </div>
+          <div class="st-src" id="st-con-src"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       FOOTER
+  ════════════════════════════════ -->
+  <footer>
+    <span style="color: var(--red)">F1PULSE</span> · 2026 Formula One World Championship ·
+    Data: <a href="https://jolpi.ca" target="_blank" rel="noopener">Jolpica F1 API</a> ·
+    Images: Wikimedia Commons · All rights reserved Formula One World Championship Ltd
+  </footer>
+
+  <!-- ════════════════════════════════
+       RACE WEEKEND MODAL
+  ════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Race weekend details">
+    <div class="modal" id="modal">
+
+      <button class="m-close" id="modal-close" aria-label="Close modal">✕</button>
+
+      <!-- Hero banner (circuit photo) -->
+      <div class="m-hero">
+        <img id="m-hero-img" src="" alt="" loading="lazy">
+        <div class="m-hero-fade"></div>
+        <div class="m-hero-emoji" id="m-hero-emoji"></div>
+        <div class="m-hero-txt">
+          <div class="m-hero-round" id="m-round"></div>
+          <div class="m-hero-name"  id="m-name"></div>
+          <div class="m-hero-sub"   id="m-sub"></div>
+        </div>
+      </div>
+
+      <!-- Session tabs + results -->
+      <div class="m-body">
+        <div class="tab-bar"   id="tab-bar"></div>
+        <div id="tab-content"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JavaScript (loaded last so the DOM is ready) -->
+  <script src="app.js"></script>
+
+</body>
+</html>
