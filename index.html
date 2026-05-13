@@ -3,213 +3,174 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>F1 PULSE — 2026 Live Dashboard</title>
+  <title>F1 Rush</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ═══════════════════════════════
-       NAVIGATION
-  ═══════════════════════════════ -->
-  <nav id="main-nav">
-    <a href="#home" class="nav-logo">
-      F1<span>PULSE</span><span class="badge">2026</span>
-    </a>
-    <ul class="nav-links" id="nav-links">
-      <li><a href="#drivers">Drivers</a></li>
-      <li><a href="#teams">Teams</a></li>
-      <li><a href="#schedule">Schedule</a></li>
-      <li><a href="#standings">Standings</a></li>
-    </ul>
-    <div class="nav-right">
-      <div class="nav-live">
-        <span class="live-dot"></span>
-        <span id="api-status-label">Live Season</span>
-      </div>
-      <button class="hamburger" id="ham" aria-label="Toggle menu">
-        <span></span><span></span><span></span>
-      </button>
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="screen active">
+    <div class="menu-road-bg">
+      <div class="road-stripe rs1"></div>
+      <div class="road-stripe rs2"></div>
+      <div class="road-stripe rs3"></div>
+      <div class="road-stripe rs4"></div>
     </div>
-  </nav>
+    <div class="menu-content">
+      <div class="menu-logo">
+        <span class="logo-f1">F1</span><span class="logo-rush">RUSH</span>
+      </div>
+      <p class="menu-tagline">FULL THROTTLE. NO MERCY.</p>
+      <canvas id="previewCanvas" width="80" height="130" class="menu-car-preview"></canvas>
+      <div class="menu-buttons">
+        <button class="btn btn-primary" id="btnStart">▶&nbsp; START RACE</button>
+        <button class="btn btn-secondary" id="btnInstructions">INSTRUCTIONS</button>
+        <button class="btn btn-secondary" id="btnHighScores">HIGH SCORES</button>
+      </div>
+      <div class="menu-best">BEST: <span id="menuBest">0</span> PTS</div>
+    </div>
+  </div>
 
-  <!-- ═══════════════════════════════
-       HERO
-  ═══════════════════════════════ -->
-  <div class="hero" id="home">
-    <div class="hero-bg"></div>
-    <div class="hero-stripe"></div>
-    <div class="hero-content">
-      <p class="hero-eyebrow">// Formula One 2026 · New Era · New Champions</p>
-      <h1 class="hero-title">Race<br />To <em>Glory</em></h1>
-      <p class="hero-sub">
-        Live standings, race weekend results, circuit imagery and countdown —
-        powered by hardcoded 2026 data upgraded live via the Jolpica F1 API.
-      </p>
-      <div class="hero-stats">
-        <div class="h-stat"><span class="h-stat-n" id="hs-drivers">22</span><span class="h-stat-l">Drivers</span></div>
-        <div class="h-stat"><span class="h-stat-n" id="hs-teams">11</span><span class="h-stat-l">Teams</span></div>
-        <div class="h-stat"><span class="h-stat-n" id="hs-races">22</span><span class="h-stat-l">Races</span></div>
-        <div class="h-stat"><span class="h-stat-n" id="hs-done">5</span><span class="h-stat-l">Completed</span></div>
+  <!-- INSTRUCTIONS -->
+  <div id="instructionsScreen" class="screen">
+    <div class="overlay-panel">
+      <h2 class="panel-title">HOW TO PLAY</h2>
+      <div class="controls-grid">
+        <div class="ctrl-item"><kbd class="key">W / ↑</kbd><span>Accelerate</span></div>
+        <div class="ctrl-item"><kbd class="key">S / ↓</kbd><span>Brake</span></div>
+        <div class="ctrl-item"><kbd class="key">A / ←</kbd><span>Move Left</span></div>
+        <div class="ctrl-item"><kbd class="key">D / →</kbd><span>Move Right</span></div>
+        <div class="ctrl-item"><kbd class="key">SPACE</kbd><span>Turbo Boost</span></div>
+        <div class="ctrl-item"><kbd class="key">P</kbd><span>Pause</span></div>
+        <div class="ctrl-item"><kbd class="key">R</kbd><span>Restart</span></div>
+      </div>
+      <h3 class="pu-title">POWER-UPS</h3>
+      <div class="pu-list">
+        <div class="pu-item"><span class="pu-badge pu-t">T</span><span><strong>Turbo</strong> — instant speed burst + turbo refill</span></div>
+        <div class="pu-item"><span class="pu-badge pu-s">S</span><span><strong>Shield</strong> — 5 seconds of invincibility</span></div>
+        <div class="pu-item"><span class="pu-badge pu-m">×2</span><span><strong>Multiplier</strong> — double score for 8 seconds</span></div>
+      </div>
+      <button class="btn btn-primary" id="btnBackInst">← BACK</button>
+    </div>
+  </div>
+
+  <!-- HIGH SCORES -->
+  <div id="highScoresScreen" class="screen">
+    <div class="overlay-panel">
+      <h2 class="panel-title">🏆 HIGH SCORES</h2>
+      <div id="scoresList" class="scores-list"></div>
+      <div class="hs-actions">
+        <button class="btn btn-danger" id="btnClearScores">CLEAR</button>
+        <button class="btn btn-primary" id="btnBackScores">← BACK</button>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════
-       COUNTDOWN
-  ═══════════════════════════════ -->
-  <div id="countdown">
-    <div class="cd-inner">
-      <div class="cd-info">
-        <div class="cd-tag">// Next Race</div>
-        <div class="cd-race" id="cd-race">🍁 Canadian Grand Prix</div>
-        <div class="cd-meta" id="cd-meta">Round 5 · Circuit Gilles Villeneuve · Montreal, Canada</div>
-      </div>
-      <div class="cd-timer">
-        <div class="cd-unit"><span class="cd-num" id="cd-d">--</span><span class="cd-lbl">Days</span></div>
-        <span class="cd-sep">:</span>
-        <div class="cd-unit"><span class="cd-num" id="cd-h">--</span><span class="cd-lbl">Hrs</span></div>
-        <span class="cd-sep">:</span>
-        <div class="cd-unit"><span class="cd-num" id="cd-m">--</span><span class="cd-lbl">Min</span></div>
-        <span class="cd-sep">:</span>
-        <div class="cd-unit"><span class="cd-num" id="cd-s">--</span><span class="cd-lbl">Sec</span></div>
-      </div>
-    </div>
-  </div>
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="screen">
+    <div class="game-layout">
 
-  <div class="divider"></div>
-
-  <!-- ═══════════════════════════════
-       01 — DRIVERS
-  ═══════════════════════════════ -->
-  <section id="drivers">
-    <div class="section">
-      <div class="sec-head">
-        <div>
-          <p class="sec-tag">// 01 — Driver Roster</p>
-          <h2 class="sec-title">The 2026 Grid</h2>
+      <!-- LEFT HUD -->
+      <aside class="hud hud-left">
+        <div class="hud-block">
+          <div class="hud-lbl">SCORE</div>
+          <div class="hud-val" id="hudScore">0</div>
         </div>
-        <div class="controls">
-          <input class="search-input" id="drv-search" type="text" placeholder="Search driver or team…" />
-          <select class="filter-select" id="team-filter"><option value="">All Teams</option></select>
-          <select class="filter-select" id="nat-filter"><option value="">All Nations</option></select>
+        <div class="hud-block">
+          <div class="hud-lbl">BEST</div>
+          <div class="hud-val hud-accent" id="hudBest">0</div>
         </div>
-      </div>
-      <div id="api-drivers-banner" class="api-banner" style="display:none"></div>
-      <div class="drivers-grid" id="drivers-grid"></div>
-    </div>
-  </section>
-
-  <div class="divider"></div>
-
-  <!-- ═══════════════════════════════
-       02 — TEAMS
-  ═══════════════════════════════ -->
-  <section id="teams">
-    <div class="section">
-      <div class="sec-head">
-        <div>
-          <p class="sec-tag">// 02 — Constructor Paddock</p>
-          <h2 class="sec-title">The Teams</h2>
+        <div class="hud-block">
+          <div class="hud-lbl">LAP</div>
+          <div class="hud-val" id="hudLap">1</div>
         </div>
-      </div>
-      <div id="api-teams-banner" class="api-banner" style="display:none"></div>
-      <div class="teams-grid" id="teams-grid"></div>
-    </div>
-  </section>
-
-  <div class="divider"></div>
-
-  <!-- ═══════════════════════════════
-       03 — SCHEDULE
-  ═══════════════════════════════ -->
-  <section id="schedule">
-    <div class="section">
-      <div class="sec-head">
-        <div>
-          <p class="sec-tag">// 03 — Race Calendar</p>
-          <h2 class="sec-title">2026 Season</h2>
+        <div class="hud-block">
+          <div class="hud-lbl">LIVES</div>
+          <div class="lives-row" id="hudLives"></div>
         </div>
-        <span class="hint-text">Click any race for weekend data</span>
-      </div>
-      <div id="api-schedule-banner" class="api-banner" style="display:none"></div>
-      <div class="schedule-grid" id="schedule-grid"></div>
-    </div>
-  </section>
+      </aside>
 
-  <div class="divider"></div>
+      <!-- CANVAS AREA -->
+      <div class="canvas-wrap">
+        <canvas id="gameCanvas" width="420" height="700"></canvas>
 
-  <!-- ═══════════════════════════════
-       04 — STANDINGS
-  ═══════════════════════════════ -->
-  <section id="standings">
-    <div class="section">
-      <div class="sec-head">
-        <div>
-          <p class="sec-tag">// 04 — Championship</p>
-          <h2 class="sec-title">Standings</h2>
-        </div>
-      </div>
-      <div class="standings-wrap">
-        <div>
-          <div class="standings-label">
-            Drivers
-            <span class="live-pill" id="drv-live-pill" style="display:none">● LIVE</span>
+        <!-- PAUSE OVERLAY -->
+        <div id="pauseOverlay" class="canvas-overlay hidden">
+          <div class="modal-box">
+            <div class="modal-title">⏸ PAUSED</div>
+            <button class="btn btn-primary" id="btnResume">▶ RESUME</button>
+            <button class="btn btn-secondary" id="btnPauseMenu">MAIN MENU</button>
           </div>
-          <div class="standings-table" id="drv-standings"></div>
-          <p class="st-src" id="drv-src">After Round 5 — Canadian Grand Prix · May 24, 2026</p>
         </div>
-        <div>
-          <div class="standings-label">
-            Constructors
-            <span class="live-pill" id="con-live-pill" style="display:none">● LIVE</span>
+
+        <!-- GAME OVER OVERLAY -->
+        <div id="gameOverOverlay" class="canvas-overlay hidden">
+          <div class="modal-box gameover-box">
+            <div class="crash-emoji">💥</div>
+            <div class="modal-title">RACE OVER</div>
+            <div class="go-stats">
+              <div class="go-stat">
+                <div class="go-lbl">YOUR SCORE</div>
+                <div class="go-num" id="goScore">0</div>
+              </div>
+              <div class="go-stat">
+                <div class="go-lbl">BEST</div>
+                <div class="go-num go-best" id="goBest">0</div>
+              </div>
+            </div>
+            <div class="new-record hidden" id="newRecord">🏆 NEW RECORD!</div>
+            <button class="btn btn-primary" id="btnRestart">▶ RACE AGAIN</button>
+            <button class="btn btn-secondary" id="btnGoMenu">MAIN MENU</button>
           </div>
-          <div class="standings-table" id="con-standings"></div>
-          <p class="st-src" id="con-src">After Round 5 — Canadian Grand Prix · May 24, 2026</p>
+        </div>
+
+        <!-- CIRCUIT FLASH -->
+        <div id="circuitFlash" class="circuit-flash hidden">
+          <div class="cf-sub">CIRCUIT</div>
+          <div class="cf-name" id="cfName"></div>
+        </div>
+
+        <!-- TOUCH CONTROLS -->
+        <div class="touch-controls" id="touchControls">
+          <button class="touch-btn" id="tLeft">◀</button>
+          <button class="touch-btn touch-boost" id="tBoost">⚡</button>
+          <button class="touch-btn" id="tRight">▶</button>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- ═══════════════════════════════
-       FOOTER
-  ═══════════════════════════════ -->
-  <footer>
-    <span class="red">F1PULSE</span> · 2026 Formula One World Championship ·
-    Data: <a href="https://jolpi.ca" target="_blank" rel="noopener">Jolpica F1 API</a> +
-    Hardcoded fallback · Images: Wikimedia Commons
-  </footer>
-
-  <!-- ═══════════════════════════════
-       RACE WEEKEND MODAL
-  ═══════════════════════════════ -->
-  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal" id="modal">
-      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
-      <div class="modal-hero">
-        <img id="modal-hero-img" src="" alt="" loading="lazy" />
-        <div class="modal-hero-fade"></div>
-        <div class="modal-hero-emoji" id="modal-hero-emoji"></div>
-        <div class="modal-hero-txt">
-          <p class="modal-hero-round" id="modal-hero-round"></p>
-          <h2 class="modal-hero-name"  id="modal-hero-name"></h2>
-          <p class="modal-hero-sub"    id="modal-hero-sub"></p>
+      <!-- RIGHT HUD -->
+      <aside class="hud hud-right">
+        <div class="hud-block">
+          <div class="hud-lbl">SPEED</div>
+          <div class="hud-val" id="hudSpeed">0</div>
+          <div class="hud-unit">KM/H</div>
         </div>
-      </div>
-      <div class="modal-body">
-        <div class="tab-bar"     id="modal-tab-bar"></div>
-        <div id="modal-tab-content"></div>
-      </div>
+        <div class="hud-block">
+          <div class="hud-lbl">TURBO</div>
+          <div class="turbo-track">
+            <div class="turbo-fill" id="turboFill"></div>
+          </div>
+          <div class="hud-unit turbo-status" id="turboStatus">READY</div>
+        </div>
+        <div class="hud-block">
+          <div class="hud-lbl">CIRCUIT</div>
+          <div class="hud-val hud-sm" id="hudCircuit">SILVERSTONE</div>
+        </div>
+        <div class="hud-block">
+          <div class="hud-lbl">WEATHER</div>
+          <div class="hud-val hud-sm" id="hudWeather">☀ DRY</div>
+        </div>
+        <div class="hud-block">
+          <div class="hud-lbl">POWER-UP</div>
+          <div class="powerup-display" id="activePowerup">—</div>
+        </div>
+      </aside>
+
     </div>
   </div>
 
-  <!-- JavaScript (loaded last so DOM is ready) -->
-  <script src="app.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
