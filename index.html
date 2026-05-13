@@ -1,175 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>F1 Rush</title>
+  <title>F1 Hub — Live Countdown & Race Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- MAIN MENU -->
-  <div id="mainMenu" class="screen active">
-    <div class="menu-road-bg">
-      <div class="road-stripe rs1"></div>
-      <div class="road-stripe rs2"></div>
-      <div class="road-stripe rs3"></div>
-      <div class="road-stripe rs4"></div>
-    </div>
-    <div class="menu-content">
-      <div class="menu-logo">
-        <span class="logo-f1">F1</span><span class="logo-rush">RUSH</span>
-      </div>
-      <p class="menu-tagline">FULL THROTTLE. NO MERCY.</p>
-      <canvas id="previewCanvas" width="80" height="130" class="menu-car-preview"></canvas>
-      <div class="menu-buttons">
-        <button class="btn btn-primary" id="btnStart">▶&nbsp; START RACE</button>
-        <button class="btn btn-secondary" id="btnInstructions">INSTRUCTIONS</button>
-        <button class="btn btn-secondary" id="btnHighScores">HIGH SCORES</button>
-      </div>
-      <div class="menu-best">BEST: <span id="menuBest">0</span> PTS</div>
-    </div>
-  </div>
-
-  <!-- INSTRUCTIONS -->
-  <div id="instructionsScreen" class="screen">
-    <div class="overlay-panel">
-      <h2 class="panel-title">HOW TO PLAY</h2>
-      <div class="controls-grid">
-        <div class="ctrl-item"><kbd class="key">W / ↑</kbd><span>Accelerate</span></div>
-        <div class="ctrl-item"><kbd class="key">S / ↓</kbd><span>Brake</span></div>
-        <div class="ctrl-item"><kbd class="key">A / ←</kbd><span>Move Left</span></div>
-        <div class="ctrl-item"><kbd class="key">D / →</kbd><span>Move Right</span></div>
-        <div class="ctrl-item"><kbd class="key">SPACE</kbd><span>Turbo Boost</span></div>
-        <div class="ctrl-item"><kbd class="key">P</kbd><span>Pause</span></div>
-        <div class="ctrl-item"><kbd class="key">R</kbd><span>Restart</span></div>
-      </div>
-      <h3 class="pu-title">POWER-UPS</h3>
-      <div class="pu-list">
-        <div class="pu-item"><span class="pu-badge pu-t">T</span><span><strong>Turbo</strong> — instant speed burst + turbo refill</span></div>
-        <div class="pu-item"><span class="pu-badge pu-s">S</span><span><strong>Shield</strong> — 5 seconds of invincibility</span></div>
-        <div class="pu-item"><span class="pu-badge pu-m">×2</span><span><strong>Multiplier</strong> — double score for 8 seconds</span></div>
-      </div>
-      <button class="btn btn-primary" id="btnBackInst">← BACK</button>
-    </div>
-  </div>
-
-  <!-- HIGH SCORES -->
-  <div id="highScoresScreen" class="screen">
-    <div class="overlay-panel">
-      <h2 class="panel-title">🏆 HIGH SCORES</h2>
-      <div id="scoresList" class="scores-list"></div>
-      <div class="hs-actions">
-        <button class="btn btn-danger" id="btnClearScores">CLEAR</button>
-        <button class="btn btn-primary" id="btnBackScores">← BACK</button>
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="logo-f1">F1</span><span class="logo-hub">HUB</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#hero" class="nav-link active">Home</a></li>
+        <li><a href="#countdown" class="nav-link">Countdown</a></li>
+        <li><a href="#upcoming" class="nav-link">Races</a></li>
+        <li><a href="#results" class="nav-link">Results</a></li>
+        <li><a href="#standings" class="nav-link">Standings</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="Search country…" class="search-input" />
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <!-- GAME SCREEN -->
-  <div id="gameScreen" class="screen">
-    <div class="game-layout">
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <img src="https://images.unsplash.com/photo-1541773367336-d3f9f1d312b4?w=1800&auto=format&fit=crop&q=80" alt="F1 Car" class="hero-img" />
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">2025 Season</div>
+      <h1 class="hero-title">Formula 1<br/><span class="title-accent">Countdown</span></h1>
+      <p class="hero-subtitle">Live countdown to the next Grand Prix — plus results, standings, and the full race calendar.</p>
+      <div class="hero-cta">
+        <a href="#countdown" class="btn btn-primary">View Countdown</a>
+        <a href="#upcoming" class="btn btn-ghost">Race Calendar</a>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
 
-      <!-- LEFT HUD -->
-      <aside class="hud hud-left">
-        <div class="hud-block">
-          <div class="hud-lbl">SCORE</div>
-          <div class="hud-val" id="hudScore">0</div>
-        </div>
-        <div class="hud-block">
-          <div class="hud-lbl">BEST</div>
-          <div class="hud-val hud-accent" id="hudBest">0</div>
-        </div>
-        <div class="hud-block">
-          <div class="hud-lbl">LAP</div>
-          <div class="hud-val" id="hudLap">1</div>
-        </div>
-        <div class="hud-block">
-          <div class="hud-lbl">LIVES</div>
-          <div class="lives-row" id="hudLives"></div>
-        </div>
-      </aside>
-
-      <!-- CANVAS AREA -->
-      <div class="canvas-wrap">
-        <canvas id="gameCanvas" width="420" height="700"></canvas>
-
-        <!-- PAUSE OVERLAY -->
-        <div id="pauseOverlay" class="canvas-overlay hidden">
-          <div class="modal-box">
-            <div class="modal-title">⏸ PAUSED</div>
-            <button class="btn btn-primary" id="btnResume">▶ RESUME</button>
-            <button class="btn btn-secondary" id="btnPauseMenu">MAIN MENU</button>
-          </div>
-        </div>
-
-        <!-- GAME OVER OVERLAY -->
-        <div id="gameOverOverlay" class="canvas-overlay hidden">
-          <div class="modal-box gameover-box">
-            <div class="crash-emoji">💥</div>
-            <div class="modal-title">RACE OVER</div>
-            <div class="go-stats">
-              <div class="go-stat">
-                <div class="go-lbl">YOUR SCORE</div>
-                <div class="go-num" id="goScore">0</div>
-              </div>
-              <div class="go-stat">
-                <div class="go-lbl">BEST</div>
-                <div class="go-num go-best" id="goBest">0</div>
-              </div>
-            </div>
-            <div class="new-record hidden" id="newRecord">🏆 NEW RECORD!</div>
-            <button class="btn btn-primary" id="btnRestart">▶ RACE AGAIN</button>
-            <button class="btn btn-secondary" id="btnGoMenu">MAIN MENU</button>
-          </div>
-        </div>
-
-        <!-- CIRCUIT FLASH -->
-        <div id="circuitFlash" class="circuit-flash hidden">
-          <div class="cf-sub">CIRCUIT</div>
-          <div class="cf-name" id="cfName"></div>
-        </div>
-
-        <!-- TOUCH CONTROLS -->
-        <div class="touch-controls" id="touchControls">
-          <button class="touch-btn" id="tLeft">◀</button>
-          <button class="touch-btn touch-boost" id="tBoost">⚡</button>
-          <button class="touch-btn" id="tRight">▶</button>
-        </div>
+  <!-- ========== LIVE COUNTDOWN ========== -->
+  <section class="section" id="countdown">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Live</span>
+        <h2 class="section-title">Next Grand Prix</h2>
       </div>
 
-      <!-- RIGHT HUD -->
-      <aside class="hud hud-right">
-        <div class="hud-block">
-          <div class="hud-lbl">SPEED</div>
-          <div class="hud-val" id="hudSpeed">0</div>
-          <div class="hud-unit">KM/H</div>
+      <div class="next-race-card" id="nextRaceCard">
+        <div class="nrc-loading">
+          <div class="spinner"></div>
+          <p>Loading race data…</p>
         </div>
-        <div class="hud-block">
-          <div class="hud-lbl">TURBO</div>
-          <div class="turbo-track">
-            <div class="turbo-fill" id="turboFill"></div>
-          </div>
-          <div class="hud-unit turbo-status" id="turboStatus">READY</div>
-        </div>
-        <div class="hud-block">
-          <div class="hud-lbl">CIRCUIT</div>
-          <div class="hud-val hud-sm" id="hudCircuit">SILVERSTONE</div>
-        </div>
-        <div class="hud-block">
-          <div class="hud-lbl">WEATHER</div>
-          <div class="hud-val hud-sm" id="hudWeather">☀ DRY</div>
-        </div>
-        <div class="hud-block">
-          <div class="hud-lbl">POWER-UP</div>
-          <div class="powerup-display" id="activePowerup">—</div>
-        </div>
-      </aside>
-
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- ========== UPCOMING RACES ========== -->
+  <section class="section section-alt" id="upcoming">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Calendar</span>
+        <h2 class="section-title">Upcoming Races</h2>
+        <div class="section-actions">
+          <button class="btn btn-sm btn-outline" id="refreshBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.96"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+      <div id="searchNoResult" class="search-no-result hidden">No races found for that country.</div>
+      <div class="races-grid" id="racesGrid">
+        <div class="grid-loading">
+          <div class="spinner"></div>
+          <p>Fetching schedule…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== LATEST RESULTS ========== -->
+  <section class="section" id="results">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Latest</span>
+        <h2 class="section-title">Race Results</h2>
+      </div>
+      <div id="resultsContainer">
+        <div class="grid-loading">
+          <div class="spinner"></div>
+          <p>Loading results…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STANDINGS ========== -->
+  <section class="section section-alt" id="standings">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">2025</span>
+        <h2 class="section-title">Standings</h2>
+      </div>
+      <div class="standings-tabs">
+        <button class="tab-btn active" data-tab="drivers">Drivers</button>
+        <button class="tab-btn" data-tab="constructors">Constructors</button>
+      </div>
+      <div id="standingsContainer">
+        <div class="grid-loading">
+          <div class="spinner"></div>
+          <p>Loading standings…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <span class="logo-f1">F1</span><span class="logo-hub">HUB</span>
+        </div>
+        <p class="footer-copy">Data provided by <a href="https://api.jolpi.ca/ergast/f1/" target="_blank">Jolpica F1 API</a>. Not affiliated with Formula 1 or FOM.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
 
   <script src="script.js"></script>
 </body>
