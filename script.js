@@ -1,902 +1,1369 @@
 /* ============================================================
-   F1 PULSE 2026 — app.js
-   ============================================================
-   SECTION 1: STATIC DATA (renders instantly, zero API needed)
-   SECTION 2: UI / HELPERS / COUNTDOWN / CARDS
-   SECTION 3: LIVE API LAYER (upgrades content after load)
+   F1 RUSH — script.js
+   Full game engine: Game, PlayerCar, AICar, PowerUp classes
+   Light theme, canvas-rendered, no dependencies
    ============================================================ */
 
-/* ═══════════════════════════════════════════════════════════
-   SECTION 1 — STATIC DATA
-   All 2026 season data lives here. The page renders from this
-   the moment it loads. No network requests required.
-═══════════════════════════════════════════════════════════ */
+'use strict';
 
-var API_BASE = 'https://api.jolpi.ca/ergast/f1';
-var SEASON   = 2026;
+/* ════════════════════════════════════════════════════════════
+   CONSTANTS & CONFIG
+════════════════════════════════════════════════════════════ */
+const CANVAS_W   = 420;
+const CANVAS_H   = 700;
+const TRACK_LEFT = 60;
+const TRACK_W    = 300;
+const LANE_COUNT = 4;
+const LANE_W     = TRACK_W / LANE_COUNT;  // 75px each
+const NUM_LIVES  = 3;
+const TURBO_MAX  = 100;
+const TURBO_DRAIN= 1.8;   // per frame while active
+const TURBO_REGEN= 0.25;  // per frame idle
 
-var TEAM_COLORS = {
-  mclaren:'#FF8000', mercedes:'#00D2BE', ferrari:'#E8002D',
-  red_bull:'#3671C6', williams:'#64C4FF', aston_martin:'#229971',
-  alpine:'#FF87BC', racing_bulls:'#6692FF', haas:'#B6BABD',
-  audi:'#B5B5B5', cadillac:'#B20000'
-};
-
-var FLAGS = {
-  'British':'🇬🇧','Dutch':'🇳🇱','Monegasque':'🇲🇨','Spanish':'🇪🇸',
-  'Australian':'🇦🇺','Mexican':'🇲🇽','Canadian':'🇨🇦','Finnish':'🇫🇮',
-  'French':'🇫🇷','German':'🇩🇪','Japanese':'🇯🇵','Chinese':'🇨🇳',
-  'American':'🇺🇸','Thai':'🇹🇭','Danish':'🇩🇰','New Zealander':'🇳🇿',
-  'Argentine':'🇦🇷','Brazilian':'🇧🇷','Italian':'🇮🇹','Swedish':'🇸🇪'
-};
-
-var DRIVER_IMGS = {
-  norris:        'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Lando_Norris_2024_%28cropped%29.jpg/400px-Lando_Norris_2024_%28cropped%29.jpg',
-  piastri:       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Oscar_Piastri_2024_%28cropped%29.jpg/400px-Oscar_Piastri_2024_%28cropped%29.jpg',
-  russell:       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/George_Russell_2023_%28cropped%29.jpg/400px-George_Russell_2023_%28cropped%29.jpg',
-  antonelli:     'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Kimi_Antonelli_2024_%28cropped%29.jpg/400px-Kimi_Antonelli_2024_%28cropped%29.jpg',
-  leclerc:       'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Charles_Leclerc_2024_%28cropped%29.jpg/400px-Charles_Leclerc_2024_%28cropped%29.jpg',
-  hamilton:      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Lewis_Hamilton_2016_Malaysia_2.jpg/400px-Lewis_Hamilton_2016_Malaysia_2.jpg',
-  max_verstappen:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Max_Verstappen_2023_%28cropped%29.jpg/400px-Max_Verstappen_2023_%28cropped%29.jpg',
-  hadjar:        'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Isack_Hadjar_2024_%28cropped%29.jpg/400px-Isack_Hadjar_2024_%28cropped%29.jpg',
-  albon:         'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Alexander_Albon_2023_%28cropped%29.jpg/400px-Alexander_Albon_2023_%28cropped%29.jpg',
-  sainz:         'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Carlos_Sainz_Jr%2C_2023_%28cropped%29.jpg/400px-Carlos_Sainz_Jr%2C_2023_%28cropped%29.jpg',
-  alonso:        'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Fernando_Alonso_2023_%28cropped%29.jpg/400px-Fernando_Alonso_2023_%28cropped%29.jpg',
-  stroll:        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Lance_Stroll_2023_%28cropped%29.jpg/400px-Lance_Stroll_2023_%28cropped%29.jpg',
-  gasly:         'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Pierre_Gasly_2024_%28cropped%29.jpg/400px-Pierre_Gasly_2024_%28cropped%29.jpg',
-  colapinto:     'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Franco_Colapinto_2024_%28cropped%29.jpg/400px-Franco_Colapinto_2024_%28cropped%29.jpg',
-  lawson:        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Liam_Lawson_2023_%28cropped%29.jpg/400px-Liam_Lawson_2023_%28cropped%29.jpg',
-  lindblad:      'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Arvid_Lindblad_2024_%28cropped%29.jpg/400px-Arvid_Lindblad_2024_%28cropped%29.jpg',
-  ocon:          'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Esteban_Ocon_2023_%28cropped%29.jpg/400px-Esteban_Ocon_2023_%28cropped%29.jpg',
-  bearman:       'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Oliver_Bearman_2024_%28cropped%29.jpg/400px-Oliver_Bearman_2024_%28cropped%29.jpg',
-  hulkenberg:    'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Nico_H%C3%BClkenberg_2023_%28cropped%29.jpg/400px-Nico_H%C3%BClkenberg_2023_%28cropped%29.jpg',
-  bortoleto:     'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Gabriel_Bortoleto_2024_%28cropped%29.jpg/400px-Gabriel_Bortoleto_2024_%28cropped%29.jpg',
-  perez:         'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Sergio_P%C3%A9rez_2023_%28cropped%29.jpg/400px-Sergio_P%C3%A9rez_2023_%28cropped%29.jpg',
-  bottas:        'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Valtteri_Bottas_2022_%28cropped%29.jpg/400px-Valtteri_Bottas_2022_%28cropped%29.jpg'
-};
-
-/* Circuit emojis + Wikimedia aerial/scene photos */
-var CIRCUIT_META = {
-  albert_park:   { emoji:'🦘', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/2022_Australian_Grand_Prix_-_Race_Day_%2851950437316%29.jpg/800px-2022_Australian_Grand_Prix_-_Race_Day_%2851950437316%29.jpg' },
-  shanghai:      { emoji:'🐉', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Shanghai_International_Circuit%2C_China%2C_aerial_photo%2C_2016.jpg/800px-Shanghai_International_Circuit%2C_China%2C_aerial_photo%2C_2016.jpg' },
-  suzuka:        { emoji:'⛩',  img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Suzuka_International_Racing_Course.jpg/800px-Suzuka_International_Racing_Course.jpg' },
-  miami:         { emoji:'🌴', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/2022_Miami_Grand_Prix.jpg/800px-2022_Miami_Grand_Prix.jpg' },
-  villeneuve:    { emoji:'🍁', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Circuit_Gilles_Villeneuve%2C_aerial_view.jpg/800px-Circuit_Gilles_Villeneuve%2C_aerial_view.jpg' },
-  monaco:        { emoji:'🏰', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Monaco_Formula_1_Grand_Prix_2022.jpg/800px-Monaco_Formula_1_Grand_Prix_2022.jpg' },
-  catalunya:     { emoji:'🐂', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Circuit_de_Barcelona-Catalunya%2C_aerial_view_%282016%29.jpg/800px-Circuit_de_Barcelona-Catalunya%2C_aerial_view_%282016%29.jpg' },
-  red_bull_ring: { emoji:'🏔', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Red_Bull_Ring%2C_aerial_view.jpg/800px-Red_Bull_Ring%2C_aerial_view.jpg' },
-  silverstone:   { emoji:'👑', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Silverstone_Circuit_aerial.jpg/800px-Silverstone_Circuit_aerial.jpg' },
-  spa:           { emoji:'🌲', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Raidillon_2022.jpg/800px-Raidillon_2022.jpg' },
-  hungaroring:   { emoji:'🏛', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Hungaroring%2C_aerial_photo.jpg/800px-Hungaroring%2C_aerial_photo.jpg' },
-  zandvoort:     { emoji:'🌊', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/2021_Dutch_Grand_Prix_%2851436949671%29.jpg/800px-2021_Dutch_Grand_Prix_%2851436949671%29.jpg' },
-  monza:         { emoji:'🏁', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Autodromo_Nazionale_di_Monza_aerial_crop.jpg/800px-Autodromo_Nazionale_di_Monza_aerial_crop.jpg' },
-  madrid:        { emoji:'💃', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Madrid_Skyline_%28152920455%29.jpg/800px-Madrid_Skyline_%28152920455%29.jpg' },
-  baku:          { emoji:'🏯', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/2022_Azerbaijan_Grand_Prix_%2852018665024%29.jpg/800px-2022_Azerbaijan_Grand_Prix_%2852018665024%29.jpg' },
-  marina_bay:    { emoji:'🌃', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/2022_Singapore_Grand_Prix_%2852362791268%29.jpg/800px-2022_Singapore_Grand_Prix_%2852362791268%29.jpg' },
-  americas:      { emoji:'🤠', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Circuit_of_the_Americas_aerial_%28cropped%29.jpg/800px-Circuit_of_the_Americas_aerial_%28cropped%29.jpg' },
-  rodriguez:     { emoji:'🌵', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/2022_Mexican_Grand_Prix_%2852453023093%29.jpg/800px-2022_Mexican_Grand_Prix_%2852453023093%29.jpg' },
-  interlagos:    { emoji:'🌿', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Aut%C3%B3dromo_Jos%C3%A9_Carlos_Pace_%28aerial_view%29.jpg/800px-Aut%C3%B3dromo_Jos%C3%A9_Carlos_Pace_%28aerial_view%29.jpg' },
-  las_vegas:     { emoji:'🎰', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Las_Vegas_Strip_2023.jpg/800px-Las_Vegas_Strip_2023.jpg' },
-  losail:        { emoji:'🏜', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Losail_International_Circuit_aerial.jpg/800px-Losail_International_Circuit_aerial.jpg' },
-  yas_marina:    { emoji:'🌅', img:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Yas_Marina_Circuit%2C_Abu_Dhabi%2C_United_Arab_Emirates_-_panoramio_%2882%29.jpg/800px-Yas_Marina_Circuit%2C_Abu_Dhabi%2C_United_Arab_Emirates_-_panoramio_%2882%29.jpg' },
-  default:       { emoji:'🏎', img:'' }
-};
-
-var DRIVERS = [
-  {id:'norris',        first:'Lando',    last:'Norris',     num:'4',  nat:'British',       team:'McLaren',      teamId:'mclaren'     },
-  {id:'piastri',       first:'Oscar',    last:'Piastri',    num:'81', nat:'Australian',    team:'McLaren',      teamId:'mclaren'     },
-  {id:'russell',       first:'George',   last:'Russell',    num:'63', nat:'British',       team:'Mercedes',     teamId:'mercedes'    },
-  {id:'antonelli',     first:'Kimi',     last:'Antonelli',  num:'12', nat:'Italian',       team:'Mercedes',     teamId:'mercedes'    },
-  {id:'leclerc',       first:'Charles',  last:'Leclerc',    num:'16', nat:'Monegasque',    team:'Ferrari',      teamId:'ferrari'     },
-  {id:'hamilton',      first:'Lewis',    last:'Hamilton',   num:'44', nat:'British',       team:'Ferrari',      teamId:'ferrari'     },
-  {id:'max_verstappen',first:'Max',      last:'Verstappen', num:'33', nat:'Dutch',         team:'Red Bull',     teamId:'red_bull'    },
-  {id:'hadjar',        first:'Isack',    last:'Hadjar',     num:'6',  nat:'French',        team:'Red Bull',     teamId:'red_bull'    },
-  {id:'albon',         first:'Alex',     last:'Albon',      num:'23', nat:'Thai',          team:'Williams',     teamId:'williams'    },
-  {id:'sainz',         first:'Carlos',   last:'Sainz',      num:'55', nat:'Spanish',       team:'Williams',     teamId:'williams'    },
-  {id:'alonso',        first:'Fernando', last:'Alonso',     num:'14', nat:'Spanish',       team:'Aston Martin', teamId:'aston_martin'},
-  {id:'stroll',        first:'Lance',    last:'Stroll',     num:'18', nat:'Canadian',      team:'Aston Martin', teamId:'aston_martin'},
-  {id:'gasly',         first:'Pierre',   last:'Gasly',      num:'10', nat:'French',        team:'Alpine',       teamId:'alpine'      },
-  {id:'colapinto',     first:'Franco',   last:'Colapinto',  num:'43', nat:'Argentine',     team:'Alpine',       teamId:'alpine'      },
-  {id:'lawson',        first:'Liam',     last:'Lawson',     num:'30', nat:'New Zealander', team:'Racing Bulls', teamId:'racing_bulls'},
-  {id:'lindblad',      first:'Arvid',    last:'Lindblad',   num:'5',  nat:'Swedish',       team:'Racing Bulls', teamId:'racing_bulls'},
-  {id:'ocon',          first:'Esteban',  last:'Ocon',       num:'31', nat:'French',        team:'Haas',         teamId:'haas'        },
-  {id:'bearman',       first:'Oliver',   last:'Bearman',    num:'87', nat:'British',       team:'Haas',         teamId:'haas'        },
-  {id:'hulkenberg',    first:'Nico',     last:'Hulkenberg', num:'27', nat:'German',        team:'Audi',         teamId:'audi'        },
-  {id:'bortoleto',     first:'Gabriel',  last:'Bortoleto',  num:'5',  nat:'Brazilian',     team:'Audi',         teamId:'audi'        },
-  {id:'perez',         first:'Sergio',   last:'Perez',      num:'11', nat:'Mexican',       team:'Cadillac',     teamId:'cadillac'    },
-  {id:'bottas',        first:'Valtteri', last:'Bottas',     num:'77', nat:'Finnish',       team:'Cadillac',     teamId:'cadillac'    }
+const CIRCUITS = [
+  { name: 'SILVERSTONE',  theme: { asphalt: '#D6D0C8', line: '#E10600',  grass: '#7DC67A', barrier: '#E10600' } },
+  { name: 'MONACO',       theme: { asphalt: '#C8C4BC', line: '#111111',  grass: '#5DAF5A', barrier: '#FF6B35' } },
+  { name: 'SUZUKA',       theme: { asphalt: '#CCCBC4', line: '#E10600',  grass: '#6BBF68', barrier: '#E10600' } },
 ];
 
-var TEAMS = [
-  {id:'mercedes',     name:'Mercedes',      country:'Germany',        color:'#00D2BE', champs:8,  pos:1,  pts:180, wins:4, drivers:['russell','antonelli']         },
-  {id:'ferrari',      name:'Ferrari',       country:'Italy',          color:'#E8002D', champs:16, pos:2,  pts:110, wins:0, drivers:['leclerc','hamilton']           },
-  {id:'mclaren',      name:'McLaren',       country:'United Kingdom', color:'#FF8000', champs:8,  pos:3,  pts:94,  wins:0, drivers:['norris','piastri']             },
-  {id:'red_bull',     name:'Red Bull',      country:'Austria',        color:'#3671C6', champs:6,  pos:4,  pts:30,  wins:0, drivers:['max_verstappen','hadjar']      },
-  {id:'alpine',       name:'Alpine',        country:'France',         color:'#FF87BC', champs:0,  pos:5,  pts:23,  wins:0, drivers:['gasly','colapinto']            },
-  {id:'haas',         name:'Haas',          country:'USA',            color:'#B6BABD', champs:0,  pos:6,  pts:18,  wins:0, drivers:['ocon','bearman']               },
-  {id:'racing_bulls', name:'Racing Bulls',  country:'Italy',          color:'#6692FF', champs:0,  pos:7,  pts:14,  wins:0, drivers:['lawson','lindblad']            },
-  {id:'williams',     name:'Williams',      country:'United Kingdom', color:'#64C4FF', champs:9,  pos:8,  pts:5,   wins:0, drivers:['albon','sainz']                },
-  {id:'audi',         name:'Audi',          country:'Germany',        color:'#B5B5B5', champs:0,  pos:9,  pts:2,   wins:0, drivers:['hulkenberg','bortoleto']       },
-  {id:'aston_martin', name:'Aston Martin',  country:'United Kingdom', color:'#229971', champs:0,  pos:10, pts:0,   wins:0, drivers:['alonso','stroll']              },
-  {id:'cadillac',     name:'Cadillac',      country:'USA',            color:'#B20000', champs:0,  pos:11, pts:0,   wins:0, drivers:['perez','bottas']               }
-];
+const WEATHER_TYPES = ['DRY', 'WET', 'STORM'];
 
-/* Standings after Round 5 — Canadian GP, May 24 2026 */
-var DRIVER_STANDINGS = [
-  {pos:1,  name:'Kimi Antonelli',    team:'Mercedes',     pts:100, wins:3},
-  {pos:2,  name:'George Russell',    team:'Mercedes',     pts:80,  wins:1},
-  {pos:3,  name:'Charles Leclerc',   team:'Ferrari',      pts:59,  wins:0},
-  {pos:4,  name:'Lando Norris',      team:'McLaren',      pts:51,  wins:0},
-  {pos:5,  name:'Lewis Hamilton',    team:'Ferrari',      pts:51,  wins:0},
-  {pos:6,  name:'Oscar Piastri',     team:'McLaren',      pts:43,  wins:0},
-  {pos:7,  name:'Max Verstappen',    team:'Red Bull',     pts:26,  wins:0},
-  {pos:8,  name:'Oliver Bearman',    team:'Haas',         pts:17,  wins:0},
-  {pos:9,  name:'Pierre Gasly',      team:'Alpine',       pts:16,  wins:0},
-  {pos:10, name:'Liam Lawson',       team:'Racing Bulls', pts:10,  wins:0},
-  {pos:11, name:'Franco Colapinto',  team:'Alpine',       pts:7,   wins:0},
-  {pos:12, name:'Arvid Lindblad',    team:'Racing Bulls', pts:4,   wins:0},
-  {pos:13, name:'Isack Hadjar',      team:'Red Bull',     pts:4,   wins:0},
-  {pos:14, name:'Carlos Sainz',      team:'Williams',     pts:4,   wins:0},
-  {pos:15, name:'Gabriel Bortoleto', team:'Audi',         pts:2,   wins:0},
-  {pos:16, name:'Esteban Ocon',      team:'Haas',         pts:1,   wins:0},
-  {pos:17, name:'Alex Albon',        team:'Williams',     pts:1,   wins:0},
-  {pos:18, name:'Nico Hulkenberg',   team:'Audi',         pts:0,   wins:0},
-  {pos:19, name:'Valtteri Bottas',   team:'Cadillac',     pts:0,   wins:0},
-  {pos:20, name:'Sergio Perez',      team:'Cadillac',     pts:0,   wins:0},
-  {pos:21, name:'Fernando Alonso',   team:'Aston Martin', pts:0,   wins:0},
-  {pos:22, name:'Lance Stroll',      team:'Aston Martin', pts:0,   wins:0}
-];
+// Points
+const PTS_OVERTAKE  = 15;
+const PTS_METER     = 1;   // per 100 scroll meters
+const PTS_POWERUP   = 50;
 
-var CONSTRUCTOR_STANDINGS = [
-  {pos:1,  name:'Mercedes',     color:'#00D2BE', pts:180, wins:4},
-  {pos:2,  name:'Ferrari',      color:'#E8002D', pts:110, wins:0},
-  {pos:3,  name:'McLaren',      color:'#FF8000', pts:94,  wins:0},
-  {pos:4,  name:'Red Bull',     color:'#3671C6', pts:30,  wins:0},
-  {pos:5,  name:'Alpine',       color:'#FF87BC', pts:23,  wins:0},
-  {pos:6,  name:'Haas',         color:'#B6BABD', pts:18,  wins:0},
-  {pos:7,  name:'Racing Bulls', color:'#6692FF', pts:14,  wins:0},
-  {pos:8,  name:'Williams',     color:'#64C4FF', pts:5,   wins:0},
-  {pos:9,  name:'Audi',         color:'#B5B5B5', pts:2,   wins:0},
-  {pos:10, name:'Aston Martin', color:'#229971', pts:0,   wins:0},
-  {pos:11, name:'Cadillac',     color:'#B20000', pts:0,   wins:0}
-];
-
-var RACES = [
-  {round:1,  name:'Australian Grand Prix',    circuit:'Albert Park Circuit',            loc:'Melbourne, Australia',   date:'2026-03-08',time:'06:00:00Z',sprint:false,cid:'albert_park'  },
-  {round:2,  name:'Chinese Grand Prix',       circuit:'Shanghai International Circuit', loc:'Shanghai, China',        date:'2026-03-15',time:'07:00:00Z',sprint:true, cid:'shanghai'     },
-  {round:3,  name:'Japanese Grand Prix',      circuit:'Suzuka International Racing Course',loc:'Suzuka, Japan',       date:'2026-03-29',time:'06:00:00Z',sprint:false,cid:'suzuka'       },
-  {round:4,  name:'Miami Grand Prix',         circuit:'Miami International Autodrome',  loc:'Miami, USA',             date:'2026-05-03',time:'19:00:00Z',sprint:true, cid:'miami'        },
-  {round:5,  name:'Canadian Grand Prix',      circuit:'Circuit Gilles Villeneuve',      loc:'Montreal, Canada',       date:'2026-05-24',time:'18:00:00Z',sprint:true, cid:'villeneuve'   },
-  {round:6,  name:'Monaco Grand Prix',        circuit:'Circuit de Monaco',              loc:'Monte Carlo, Monaco',    date:'2026-06-07',time:'13:00:00Z',sprint:false,cid:'monaco'       },
-  {round:7,  name:'Spanish Grand Prix',       circuit:'Circuit de Barcelona-Catalunya', loc:'Barcelona, Spain',       date:'2026-06-14',time:'13:00:00Z',sprint:false,cid:'catalunya'    },
-  {round:8,  name:'Austrian Grand Prix',      circuit:'Red Bull Ring',                  loc:'Spielberg, Austria',     date:'2026-06-28',time:'13:00:00Z',sprint:false,cid:'red_bull_ring'},
-  {round:9,  name:'British Grand Prix',       circuit:'Silverstone Circuit',            loc:'Silverstone, UK',        date:'2026-07-05',time:'14:00:00Z',sprint:true, cid:'silverstone'  },
-  {round:10, name:'Belgian Grand Prix',       circuit:'Circuit de Spa-Francorchamps',   loc:'Spa, Belgium',           date:'2026-07-19',time:'13:00:00Z',sprint:false,cid:'spa'          },
-  {round:11, name:'Hungarian Grand Prix',     circuit:'Hungaroring',                    loc:'Budapest, Hungary',      date:'2026-07-26',time:'13:00:00Z',sprint:false,cid:'hungaroring'  },
-  {round:12, name:'Dutch Grand Prix',         circuit:'Circuit Zandvoort',              loc:'Zandvoort, Netherlands', date:'2026-08-23',time:'13:00:00Z',sprint:true, cid:'zandvoort'    },
-  {round:13, name:'Italian Grand Prix',       circuit:'Autodromo Nazionale Monza',      loc:'Monza, Italy',           date:'2026-09-06',time:'13:00:00Z',sprint:false,cid:'monza'        },
-  {round:14, name:'Madrid Grand Prix',        circuit:'Circuit de Madrid',              loc:'Madrid, Spain',          date:'2026-09-14',time:'13:00:00Z',sprint:false,cid:'madrid'       },
-  {round:15, name:'Azerbaijan Grand Prix',    circuit:'Baku City Circuit',              loc:'Baku, Azerbaijan',       date:'2026-09-27',time:'11:00:00Z',sprint:false,cid:'baku'         },
-  {round:16, name:'Singapore Grand Prix',     circuit:'Marina Bay Street Circuit',      loc:'Singapore',              date:'2026-10-11',time:'12:00:00Z',sprint:true, cid:'marina_bay'   },
-  {round:17, name:'United States Grand Prix', circuit:'Circuit of the Americas',        loc:'Austin, USA',            date:'2026-10-25',time:'19:00:00Z',sprint:false,cid:'americas'     },
-  {round:18, name:'Mexico City Grand Prix',   circuit:'Autodromo Hermanos Rodriguez',   loc:'Mexico City, Mexico',    date:'2026-11-01',time:'19:00:00Z',sprint:false,cid:'rodriguez'    },
-  {round:19, name:'Sao Paulo Grand Prix',     circuit:'Autodromo Jose Carlos Pace',     loc:'Sao Paulo, Brazil',      date:'2026-11-08',time:'17:00:00Z',sprint:false,cid:'interlagos'   },
-  {round:20, name:'Las Vegas Grand Prix',     circuit:'Las Vegas Strip Circuit',        loc:'Las Vegas, USA',         date:'2026-11-21',time:'06:00:00Z',sprint:false,cid:'las_vegas'    },
-  {round:21, name:'Qatar Grand Prix',         circuit:'Lusail International Circuit',   loc:'Lusail, Qatar',          date:'2026-11-29',time:'17:00:00Z',sprint:false,cid:'losail'       },
-  {round:22, name:'Abu Dhabi Grand Prix',     circuit:'Yas Marina Circuit',             loc:'Abu Dhabi, UAE',         date:'2026-12-06',time:'13:00:00Z',sprint:false,cid:'yas_marina'   }
-];
-
-
-/* ═══════════════════════════════════════════════════════════
-   SECTION 2 — UI HELPERS, RENDERING & COUNTDOWN
-   Pure functions. No API calls here.
-═══════════════════════════════════════════════════════════ */
-
-function tColor(id)  { return TEAM_COLORS[id] || '#E10600'; }
-function getFlag(n)  { return FLAGS[n] || '🏁'; }
-function getInits(n) { return n.split(/\s+/).map(function(w){return w[0];}).join('').slice(0,3).toUpperCase(); }
-function posClass(p) { return p===1?'p1':p===2?'p2':p===3?'p3':''; }
-function esc(s)      { return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function mkAvatar(f,l,c) {
-  return 'https://ui-avatars.com/api/?name='+encodeURIComponent(f+' '+l)
-       +'&background=1a1a1a&color='+(c||'e10600').replace('#','')
-       +'&size=200&bold=true&font-size=0.38';
+/* ════════════════════════════════════════════════════════════
+   UTILITIES
+════════════════════════════════════════════════════════════ */
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function rand(min, max) { return Math.random() * (max - min) + min; }
+function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+function rectOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw && ax + aw > bx &&
+         ay < by + bh && ay + ah > by;
 }
 
-function getCircuitMeta(cid) {
-  if (!cid) return CIRCUIT_META.default;
-  var s = cid.toLowerCase();
-  var keys = Object.keys(CIRCUIT_META);
-  for (var i=0;i<keys.length;i++) {
-    if (s.indexOf(keys[i])>=0 || keys[i].indexOf(s)>=0) return CIRCUIT_META[keys[i]];
-  }
-  return CIRCUIT_META.default;
-}
-
-/* ── Navigation ── */
-document.getElementById('ham').addEventListener('click', function() {
-  document.getElementById('nav-links').classList.toggle('open');
-});
-document.querySelectorAll('.nav-links a').forEach(function(a) {
-  a.addEventListener('click', function() { document.getElementById('nav-links').classList.remove('open'); });
-});
-
-if (window.IntersectionObserver) {
-  var navIO = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) {
-      if (e.isIntersecting) {
-        document.querySelectorAll('.nav-links a').forEach(function(a) {
-          a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id);
-        });
-      }
-    });
-  }, {threshold:0.3, rootMargin:'-58px 0px 0px 0px'});
-  ['drivers','teams','schedule','standings'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) navIO.observe(el);
-  });
-}
-
-/* ── Countdown ── */
-var _cdTimer = null;
-
-function startCountdown() {
-  if (_cdTimer) { clearInterval(_cdTimer); _cdTimer = null; }
-  var now = Date.now();
-  var next = null;
-  for (var i=0; i<RACES.length; i++) {
-    if (new Date(RACES[i].date + 'T' + RACES[i].time).getTime() > now) {
-      next = RACES[i]; break;
-    }
-  }
-  if (!next) {
-    document.getElementById('cd-race').textContent = 'Season Complete';
-    document.getElementById('cd-meta').textContent = '2026 Formula One World Championship';
-    ['cd-d','cd-h','cd-m','cd-s'].forEach(function(id) { document.getElementById(id).textContent = '00'; });
-    return;
-  }
-  var meta   = getCircuitMeta(next.cid);
-  var target = new Date(next.date + 'T' + next.time).getTime();
-  document.getElementById('cd-race').textContent = meta.emoji + ' ' + next.name;
-  document.getElementById('cd-meta').textContent = 'Round ' + next.round + ' \u00b7 ' + next.circuit + ' \u00b7 ' + next.loc;
-
-  function tick() {
-    var diff = target - Date.now();
-    if (diff <= 0) {
-      ['cd-d','cd-h','cd-m','cd-s'].forEach(function(id){ document.getElementById(id).textContent='00'; });
-      clearInterval(_cdTimer); return;
-    }
-    document.getElementById('cd-d').textContent = String(Math.floor(diff/86400000)).padStart(2,'0');
-    document.getElementById('cd-h').textContent = String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
-    document.getElementById('cd-m').textContent = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
-    document.getElementById('cd-s').textContent = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
-  }
-  tick();
-  _cdTimer = setInterval(tick, 1000);
-}
-
-/* ── Driver cards ── */
-var _activeDrivers = DRIVERS;
-var _teamMap = {}; /* driverId -> team name, filled by API */
-var _conMap  = {}; /* driverId -> constructorId, filled by API */
-
-function renderDriverCards(list) {
-  var grid = document.getElementById('drivers-grid');
-  if (!list.length) {
-    grid.innerHTML = '<div class="no-results">NO DRIVERS MATCH YOUR FILTERS</div>';
-    return;
-  }
-  var html = '';
-  for (var i=0; i<list.length; i++) {
-    var d = list[i];
-    var teamId = d.teamId || _conMap[d.driverId || d.id] || '';
-    var team   = d.team   || _teamMap[d.driverId || d.id] || 'Unknown';
-    var color  = tColor(teamId);
-    var img    = DRIVER_IMGS[d.id || d.driverId] || mkAvatar(d.first || d.givenName || '', d.last || d.familyName || '', color);
-    var num    = d.num || d.permanentNumber || '?';
-    var nat    = d.nat || d.nationality || '';
-    var first  = d.first  || d.givenName  || '';
-    var last   = d.last   || d.familyName || '';
-    var fb     = mkAvatar(first, last, color);
-    html +=
-      '<div class="driver-card" style="--tc:' + color + '">'
-    +   '<div class="driver-img">'
-    +     '<img src="' + img + '" alt="' + esc(first) + ' ' + esc(last) + '" loading="lazy" onerror="this.src=\'' + fb + '\'">'
-    +     '<div class="driver-img-fade"></div>'
-    +     '<div class="driver-number">#' + num + '</div>'
-    +     '<div class="driver-flag">' + getFlag(nat) + '</div>'
-    +   '</div>'
-    +   '<div class="driver-info">'
-    +     '<div class="driver-name">' + esc(first) + ' <span>' + esc(last) + '</span></div>'
-    +     '<div class="driver-team">' + esc(team) + '</div>'
-    +     '<div class="driver-nat">'  + esc(nat)  + '</div>'
-    +   '</div>'
-    + '</div>';
-  }
-  grid.innerHTML = html;
-}
-
-function buildFilterDropdowns() {
-  var tf = document.getElementById('team-filter');
-  var nf = document.getElementById('nat-filter');
-  while (tf.options.length > 1) tf.remove(1);
-  while (nf.options.length > 1) nf.remove(1);
-  var teams = [], nats = [];
-  for (var i=0; i<_activeDrivers.length; i++) {
-    var d = _activeDrivers[i];
-    var t = d.team || _teamMap[d.driverId||d.id] || '';
-    var n = d.nat  || d.nationality || '';
-    if (t && teams.indexOf(t) < 0) teams.push(t);
-    if (n && nats.indexOf(n)  < 0) nats.push(n);
-  }
-  teams.sort().forEach(function(t) { var o=document.createElement('option'); o.value=t; o.textContent=t; tf.appendChild(o); });
-  nats.sort().forEach(function(n)  { var o=document.createElement('option'); o.value=n; o.textContent=getFlag(n)+' '+n; nf.appendChild(o); });
-}
-
-function applyFilter() {
-  var q  = (document.getElementById('drv-search').value||'').toLowerCase();
-  var tv = document.getElementById('team-filter').value;
-  var nv = document.getElementById('nat-filter').value;
-  var out = [];
-  for (var i=0; i<_activeDrivers.length; i++) {
-    var d    = _activeDrivers[i];
-    var name = (d.first||d.givenName||'') + ' ' + (d.last||d.familyName||'');
-    var team = d.team || _teamMap[d.driverId||d.id] || '';
-    var nat  = d.nat  || d.nationality || '';
-    if ((!q  || (name+' '+team).toLowerCase().indexOf(q)>=0) &&
-        (!tv || team===tv) &&
-        (!nv || nat===nv)) out.push(d);
-  }
-  renderDriverCards(out);
-}
-
-/* ── Team cards ── */
-function renderTeams(teamList, standMap, topId) {
-  var grid = document.getElementById('teams-grid');
-  var dByTeam = {};
-  for (var i=0; i<_activeDrivers.length; i++) {
-    var d   = _activeDrivers[i];
-    var cid = d.teamId || _conMap[d.driverId||d.id] || '';
-    if (cid) {
-      if (!dByTeam[cid]) dByTeam[cid] = [];
-      dByTeam[cid].push((d.first||d.givenName||'') + ' ' + (d.last||d.familyName||''));
-    }
-  }
-  var html = '';
-  for (var i=0; i<teamList.length; i++) {
-    var t        = teamList[i];
-    var tid      = t.id || t.constructorId || '';
-    var isLeader = topId ? tid===topId : t.pos===1;
-    var color    = t.color || tColor(tid);
-    var st       = standMap ? (standMap[tid] || {pos:t.pos||'?', pts:t.pts||0, wins:t.wins||0}) : {pos:t.pos,pts:t.pts,wins:t.wins};
-    var drivers  = t.drivers ? t.drivers.map(function(id) {
-      for (var j=0;j<DRIVERS.length;j++) { if(DRIVERS[j].id===id) return DRIVERS[j].first+' '+DRIVERS[j].last; }
-      return id;
-    }) : (dByTeam[tid] || []);
-    html +=
-      (isLeader
-        ? '<div class="team-card leader" style="--tc:'+color+'"><div class="leader-badge">\u2605 Championship Leader</div>'
-        : '<div class="team-card" style="--tc:'+color+'">')
-    + '<div class="team-logo-row">'
-    +   '<div class="team-logo" style="color:'+color+';border-color:'+color+'40">'+getInits(t.name)+'</div>'
-    +   '<div><div class="team-name">'+esc(t.name)+'</div><div class="team-country">'+esc(t.country||t.nationality||'')+'</div></div>'
-    + '</div>'
-    + '<div class="team-drivers">'
-    +   (drivers.length ? drivers.map(function(n){return '<span class="driver-chip">'+esc(n)+'</span>';}).join('') : '<span class="driver-chip" style="color:var(--dim)">TBA</span>')
-    + '</div>'
-    + '<div class="team-stats">'
-    +   '<div class="team-stat"><span class="team-stat-n">'+esc(st.pos)+'</span><span class="team-stat-l">Position</span></div>'
-    +   '<div class="team-stat"><span class="team-stat-n">'+esc(st.pts)+'</span><span class="team-stat-l">Points</span></div>'
-    +   '<div class="team-stat"><span class="team-stat-n">'+esc(t.champs!=null?t.champs:st.wins)+'</span><span class="team-stat-l">'+(t.champs!=null?'WCC Titles':'Wins')+'</span></div>'
-    + '</div>'
-    + '</div>';
-  }
-  grid.innerHTML = html;
-}
-
-/* ── Schedule grid ── */
-function renderSchedule(races) {
-  var now = Date.now();
-  var nextRound = null;
-  var completed = 0;
-  for (var i=0; i<races.length; i++) {
-    var t = new Date((races[i].date||races[i].Date)+'T'+(races[i].time||races[i].Time||'14:00:00Z')).getTime();
-    if (t > now) { nextRound = races[i].round; break; }
-  }
-  var html = '';
-  for (var i=0; i<races.length; i++) {
-    var r      = races[i];
-    var rDate  = (r.date||r.Date) + 'T' + (r.time||r.Time||'14:00:00Z');
-    var rt     = new Date(rDate).getTime();
-    var isPast = rt < now;
-    var isNext = r.round === nextRound;
-    if (isPast && !isNext) completed++;
-
-    var lDate = new Date(rDate).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
-    var lTime = new Date(rDate).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
-
-    /* Support both hardcoded and Ergast API formats */
-    var cid      = r.cid || (r.Circuit && r.Circuit.circuitId) || '';
-    var name     = r.name || r.raceName || '';
-    var circuit  = r.circuit || (r.Circuit && r.Circuit.circuitName) || '';
-    var loc      = r.loc || (r.Circuit && r.Circuit.Location ? r.Circuit.Location.locality+', '+r.Circuit.Location.country : '');
-    var hasSprint= r.sprint || !!(r.Sprint);
-
-    var meta = getCircuitMeta(cid);
-    var tags = '';
-    if (isNext)      tags += '<span class="tag tag-next">Next Race</span>';
-    else if (isPast) tags += '<span class="tag tag-done">Completed</span>';
-    else             tags += '<span class="tag tag-soon">Upcoming</span>';
-    if (hasSprint)   tags += ' <span class="tag tag-sprint">Sprint</span>';
-
-    html +=
-      '<div class="race-card'+(isNext?' is-next':'')+(isPast&&!isNext?' is-past':'')+'"'
-    + ' onclick="openModal('+r.round+')" tabindex="0" role="button" aria-label="'+esc(name)+'">'
-    + '<div class="race-img">'
-    +   (meta.img ? '<img src="'+meta.img+'" alt="'+esc(name)+'" loading="lazy" onerror="this.style.display=\'none\'">' : '')
-    +   '<div class="race-img-overlay"></div>'
-    +   '<div class="race-emoji">'+meta.emoji+'</div>'
-    +   '<div class="race-round-badge">R'+r.round+'</div>'
-    + '</div>'
-    + '<div class="race-head">'
-    +   '<div class="race-name">'+esc(name)+'</div>'
-    +   '<div class="race-date">'+lDate+' \u00b7 '+lTime+'</div>'
-    + '</div>'
-    + '<div class="race-body">'
-    +   '<div class="race-circuit">\uD83C\uDFDF '+esc(circuit)+'</div>'
-    +   '<div class="race-loc">\uD83D\uDCCD '+esc(loc)+'</div>'
-    +   '<div class="race-tags">'+tags+'</div>'
-    + '</div>'
-    + '<div class="race-hint">CLICK FOR RESULTS \u2192</div>'
-    + '</div>';
-  }
-  document.getElementById('schedule-grid').innerHTML = html;
-  document.querySelectorAll('.race-card').forEach(function(c) {
-    c.addEventListener('keydown', function(e) { if(e.key==='Enter'||e.key===' ') c.click(); });
-  });
-  document.getElementById('hs-done').textContent = completed;
-}
-
-/* ── Standings tables ── */
-function renderDriverStandings(rows) {
-  var html = '<div class="standings-head drv">'
-    + '<span>Pos</span><span>Driver</span>'
-    + '<span style="text-align:right">Pts</span>'
-    + '<span style="text-align:right">W</span></div>';
-  for (var i=0; i<rows.length; i++) {
-    var s = rows[i];
-    var p = parseInt(s.pos||s.position)||0;
-    html += '<div class="standings-row drv '+posClass(p)+'">'
-      + '<span class="st-pos">'+p+'</span>'
-      + '<div><div class="st-name">'+esc(s.name||(s.Driver?s.Driver.givenName+' '+s.Driver.familyName:''))+'</div>'
-      + '<div class="st-sub">'+esc(s.team||(s.Constructors&&s.Constructors[0]?s.Constructors[0].name:''))+'</div></div>'
-      + '<span class="st-pts">'+esc(s.pts||s.points)+'</span>'
-      + '<span class="st-wins">'+esc(s.wins)+'W</span>'
-      + '</div>';
-  }
-  document.getElementById('drv-standings').innerHTML = html;
-}
-
-function renderConstructorStandings(rows) {
-  var html = '<div class="standings-head con">'
-    + '<span>Pos</span><span>Team</span>'
-    + '<span style="text-align:right">Pts</span></div>';
-  for (var i=0; i<rows.length; i++) {
-    var s     = rows[i];
-    var p     = parseInt(s.pos||s.position)||0;
-    var cid   = s.constructorId || '';
-    var color = s.color || tColor(cid);
-    var name  = s.name || (s.Constructor && s.Constructor.name) || '';
-    html += '<div class="standings-row con '+posClass(p)+'">'
-      + '<span class="st-pos">'+p+'</span>'
-      + '<div><div class="st-name" style="color:'+color+'">'+esc(name)+'</div>'
-      + '<div class="st-sub">'+esc(s.wins)+' win'+(s.wins!==1&&s.wins!=='1'?'s':'')+'</div></div>'
-      + '<span class="st-pts">'+esc(s.pts||s.points)+'</span>'
-      + '</div>';
-  }
-  document.getElementById('con-standings').innerHTML = html;
-}
-
-/* ── Modal close ── */
-var _activeRound = null;
-var _activeTab   = null;
-var _cache       = {};
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-  _activeRound = null;
-}
-document.getElementById('modal-close').addEventListener('click', closeModal);
-document.getElementById('modal-overlay').addEventListener('click', function(e) {
-  if (e.target === document.getElementById('modal-overlay')) closeModal();
-});
-document.addEventListener('keydown', function(e) { if (e.key==='Escape') closeModal(); });
-
-/* ── Modal open ── */
-function openModal(round) {
-  /* Look up race — prefer API-enriched data */
-  var race = null;
-  for (var i=0; i<_liveRaces.length; i++) {
-    if (parseInt(_liveRaces[i].round) === round) { race = _liveRaces[i]; break; }
-  }
-  if (!race) {
-    for (var i=0; i<RACES.length; i++) {
-      if (RACES[i].round === round) { race = RACES[i]; break; }
-    }
-  }
-  if (!race) return;
-  _activeRound = round;
-
-  var now      = Date.now();
-  var rDate    = (race.date||race.Date) + 'T' + (race.time||race.Time||'14:00:00Z');
-  var isPast   = new Date(rDate).getTime() < now;
-  var cid      = race.cid || (race.Circuit && race.Circuit.circuitId) || '';
-  var meta     = getCircuitMeta(cid);
-  var name     = race.name || race.raceName || '';
-  var circuit  = race.circuit || (race.Circuit && race.Circuit.circuitName) || '';
-  var loc      = race.loc || (race.Circuit && race.Circuit.Location ? race.Circuit.Location.locality+', '+race.Circuit.Location.country : '');
-  var hasSprint= race.sprint || !!(race.Sprint);
-
-  /* Populate hero */
-  var heroImg = document.getElementById('modal-hero-img');
-  heroImg.src = meta.img || '';
-  heroImg.style.display = meta.img ? '' : 'none';
-  heroImg.onerror = function() { heroImg.style.display='none'; };
-  document.getElementById('modal-hero-emoji').textContent = meta.emoji;
-  document.getElementById('modal-hero-round').textContent = 'Round '+round+' \u00b7 '+
-    new Date(rDate).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('modal-hero-name').textContent  = name;
-  document.getElementById('modal-hero-sub').textContent   = circuit + ' \u00b7 ' + loc;
-
-  var tabBar     = document.getElementById('modal-tab-bar');
-  var tabContent = document.getElementById('modal-tab-content');
-
-  if (!isPast) {
-    /* Future race: show countdown info */
-    tabBar.innerHTML = '';
-    var lDate = new Date(rDate).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-    var lTime = new Date(rDate).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',timeZoneName:'long'});
-    tabContent.innerHTML =
-      '<div class="m-future">'
-    +   '<span class="big-emoji">'+meta.emoji+'</span>'
-    +   '<h3>'+esc(name)+'</h3>'
-    +   '<div class="f-meta">'+esc(circuit)+' \u00b7 '+esc(loc)+'</div>'
-    +   '<div class="date-box">'
-    +     '<div class="date-lbl">Race Date</div>'
-    +     '<div class="date-val">'+lDate+'</div>'
-    +     '<div class="time-val">'+lTime+'</div>'
-    +   '</div>'
-    +   (hasSprint ? '<br><span class="tag tag-sprint" style="display:inline-block;margin-top:0.75rem">Sprint Weekend</span>' : '')
-    + '</div>';
-  } else {
-    /* Past race: show session tabs */
-    var tabs = [{id:'race',label:'Race'},{id:'quali',label:'Qualifying'},{id:'fp3',label:'FP3'},{id:'fp2',label:'FP2'},{id:'fp1',label:'FP1'}];
-    if (hasSprint) tabs.splice(1,0,{id:'sprint',label:'Sprint'});
-    _activeTab = tabs[0].id;
-    tabBar.innerHTML = tabs.map(function(t,i){
-      return '<button class="tab-btn'+(i===0?' active':'')+'" onclick="switchTab(\''+t.id+'\',this)">'+t.label+'</button>';
-    }).join('');
-    loadSession(round, _activeTab, tabContent);
+/* ════════════════════════════════════════════════════════════
+   AUDIO ENGINE (Web Audio API — no files needed)
+════════════════════════════════════════════════════════════ */
+class AudioEngine {
+  constructor() {
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 0.4;
+      this.masterGain.connect(this.ctx.destination);
+      this.engineNode = null;
+      this.engineGain = null;
+      this.ready = true;
+    } catch(e) { this.ready = false; }
   }
 
-  document.getElementById('modal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function switchTab(session, btn) {
-  if (session === _activeTab) return;
-  _activeTab = session;
-  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  loadSession(_activeRound, session, document.getElementById('modal-tab-content'));
-}
-
-/* ── Result table builders ── */
-function buildPodium(results, type) {
-  if (!results || results.length < 3) return '';
-  function getTime(r) {
-    if (type==='quali') return r.Q3||r.Q2||r.Q1||'';
-    return (r.Time&&r.Time.time)||(r.status&&r.status!=='Finished'?r.status:'')||'';
+  resume() {
+    if (this.ready && this.ctx.state === 'suspended') this.ctx.resume();
   }
-  function slot(r, trophy, cls, label) {
-    return '<div class="podium-slot '+cls+'">'
-      +'<span class="pod-trophy">'+trophy+'</span>'
-      +'<div class="pod-pos">'+label+'</div>'
-      +'<div class="pod-name">'+(r&&r.Driver?esc(r.Driver.familyName):'')+'</div>'
-      +'<div class="pod-team">'+(r&&r.Constructor?esc(r.Constructor.name):'')+'</div>'
-      +'<div class="pod-time">'+esc(getTime(r))+'</div>'
-      +'</div>';
+
+  /* Simple beep / synth tones */
+  _beep(freq, dur, type='square', vol=0.3, startTime=null) {
+    if (!this.ready) return;
+    const t = startTime || this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g   = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(g);
+    g.connect(this.masterGain);
+    osc.start(t);
+    osc.stop(t + dur);
   }
-  return '<div class="podium">'+slot(results[1],'🥈','p2','2ND')+slot(results[0],'🥇','p1','1ST')+slot(results[2],'🥉','p3','3RD')+'</div>';
-}
 
-function buildRaceTable(results) {
-  var rows = '';
-  for (var i=0; i<results.length; i++) {
-    var r   = results[i];
-    var pos = parseInt(r.position)||0;
-    var fl  = r.FastestLap && r.FastestLap.rank==='1';
-    var ts  = (r.Time&&r.Time.time)||(r.status&&r.status!=='Finished'?r.status:'—');
-    var dId = r.Driver && r.Driver.driverId;
-    var tId = r.Constructor && r.Constructor.constructorId;
-    var di  = dId && DRIVER_IMGS[dId];
-    var av  = di ? '<img src="'+di+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:0.35rem;border:1px solid '+tColor(tId)+'" loading="lazy" onerror="this.remove()">' : '';
-    rows += '<tr class="rp'+(pos<=3?pos:'')+'">'
-      +'<td class="r-pos">'+pos+'</td>'
-      +'<td>'+av+'<span class="r-drv">'+(r.Driver?esc(r.Driver.givenName)+' '+esc(r.Driver.familyName):'')+(fl?'<span class="fl-pill">\u26A1 FL</span>':'')+'</span></td>'
-      +'<td><span class="r-team">'+(r.Constructor?esc(r.Constructor.name):'')+'</span></td>'
-      +'<td class="r-time">'+esc(ts)+'</td>'
-      +'<td class="r-pts">'+(r.points||'—')+'</td>'
-      +'</tr>';
+  startEngine() {
+    if (!this.ready || this.engineNode) return;
+    this.engineNode = this.ctx.createOscillator();
+    this.engineGain = this.ctx.createGain();
+    this.engineNode.type = 'sawtooth';
+    this.engineNode.frequency.value = 90;
+    this.engineGain.gain.value = 0.06;
+    this.engineNode.connect(this.engineGain);
+    this.engineGain.connect(this.masterGain);
+    this.engineNode.start();
   }
-  return '<div class="res-wrap"><table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Time/Gap</th><th class="right">Pts</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function buildQualiTable(results) {
-  var rows = '';
-  for (var i=0;i<results.length;i++) {
-    var r=results[i]; var pos=parseInt(r.position)||0;
-    rows+='<tr class="rp'+(pos<=3?pos:'')+'">'
-      +'<td class="r-pos">'+pos+'</td>'
-      +'<td><span class="r-drv">'+(r.Driver?esc(r.Driver.givenName)+' '+esc(r.Driver.familyName):'')+'</span></td>'
-      +'<td><span class="r-team">'+(r.Constructor?esc(r.Constructor.name):'')+'</span></td>'
-      +'<td class="r-time">'+esc(r.Q1||'—')+'</td>'
-      +'<td class="r-time">'+esc(r.Q2||'—')+'</td>'
-      +'<td class="r-time">'+esc(r.Q3||'—')+'</td>'
-      +'</tr>';
+  setEngineRPM(speed) { /* speed 0-1 */
+    if (!this.ready || !this.engineNode) return;
+    this.engineNode.frequency.value = 80 + speed * 160;
+    this.engineGain.gain.value = 0.04 + speed * 0.05;
   }
-  return '<div class="res-wrap"><table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Q1</th><th>Q2</th><th>Q3</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function buildPracticeTable(results) {
-  var rows = '';
-  for (var i=0;i<results.length;i++) {
-    var r=results[i]; var pos=parseInt(r.position)||0;
-    rows+='<tr class="rp'+(pos<=3?pos:'')+'">'
-      +'<td class="r-pos">'+pos+'</td>'
-      +'<td><span class="r-drv">'+(r.Driver?esc(r.Driver.givenName)+' '+esc(r.Driver.familyName):'')+'</span></td>'
-      +'<td><span class="r-team">'+(r.Constructor?esc(r.Constructor.name):'')+'</span></td>'
-      +'<td class="r-time">'+(r.Time?esc(r.Time.time):'—')+'</td>'
-      +'<td class="r-time" style="text-align:right">'+esc(r.Laps||r.laps||'—')+'</td>'
-      +'</tr>';
+  stopEngine() {
+    if (!this.ready || !this.engineNode) return;
+    this.engineNode.stop();
+    this.engineNode = null;
+    this.engineGain = null;
   }
-  return '<div class="res-wrap"><table class="res-table"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Best Time</th><th class="right">Laps</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
 
+  playCrash() {
+    if (!this.ready) return;
+    // White noise burst
+    const buf  = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.6, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.9;
+    const src = this.ctx.createBufferSource();
+    const g   = this.ctx.createGain();
+    g.gain.setValueAtTime(0.7, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
+    src.buffer = buf;
+    src.connect(g);
+    g.connect(this.masterGain);
+    src.start();
+    // Low thud
+    this._beep(50, 0.4, 'triangle', 0.5);
+  }
 
-/* ═══════════════════════════════════════════════════════════
-   SECTION 3 — LIVE API LAYER
-   All network requests live here. They run AFTER the page
-   has already rendered from hardcoded data. If any call fails
-   the page keeps working perfectly with the static data.
-   API: https://api.jolpi.ca/ergast/f1 (Jolpica / Ergast F1)
-═══════════════════════════════════════════════════════════ */
-
-var _liveRaces = []; /* cache of races from API (used by openModal) */
-
-/* Generic fetch wrapper with 8s timeout and silent error handling */
-function apiFetch(path, callback) {
-  var url = API_BASE + path;
-  var xhr = new XMLHttpRequest();
-  var done = false;
-  var timer = setTimeout(function() {
-    if (!done) { done = true; xhr.abort(); callback(null); }
-  }, 8000);
-  xhr.open('GET', url, true);
-  xhr.setRequestHeader('Accept', 'application/json');
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState !== 4) return;
-    if (done) return;
-    done = true;
-    clearTimeout(timer);
-    if (xhr.status === 200) {
-      try { callback(JSON.parse(xhr.responseText)); }
-      catch(e) { callback(null); }
+  playPowerUp(type) {
+    if (!this.ready) return;
+    if (type === 'turbo') {
+      this._beep(400, 0.08, 'square', 0.3);
+      this._beep(600, 0.12, 'square', 0.3, this.ctx.currentTime + 0.08);
+      this._beep(900, 0.18, 'square', 0.3, this.ctx.currentTime + 0.2);
+    } else if (type === 'shield') {
+      this._beep(500, 0.15, 'sine', 0.3);
+      this._beep(700, 0.15, 'sine', 0.3, this.ctx.currentTime + 0.15);
     } else {
-      callback(null);
+      this._beep(800, 0.1, 'sine', 0.25);
+      this._beep(1000, 0.1, 'sine', 0.25, this.ctx.currentTime + 0.1);
+      this._beep(1200, 0.15, 'sine', 0.25, this.ctx.currentTime + 0.2);
     }
-  };
-  xhr.send();
+  }
+
+  playTurboActivate() {
+    if (!this.ready) return;
+    this._beep(200, 0.05, 'sawtooth', 0.4);
+    this._beep(300, 0.05, 'sawtooth', 0.4, this.ctx.currentTime + 0.05);
+    this._beep(500, 0.2,  'sawtooth', 0.4, this.ctx.currentTime + 0.1);
+  }
+
+  playOvertake() {
+    if (!this.ready) return;
+    this._beep(600, 0.05, 'square', 0.2);
+    this._beep(900, 0.1,  'square', 0.2, this.ctx.currentTime + 0.05);
+  }
+
+  playMenuClick() {
+    if (!this.ready) return;
+    this._beep(440, 0.08, 'square', 0.2);
+  }
 }
 
-/* Show a small banner under a section header */
-function showBanner(id, type, msg) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  el.className = 'api-banner ' + type;
-  el.textContent = (type==='success' ? '\u2705 ' : '\u26a0 ') + msg;
-  el.style.display = 'flex';
-}
+/* ════════════════════════════════════════════════════════════
+   PLAYER CAR
+════════════════════════════════════════════════════════════ */
+class PlayerCar {
+  constructor(canvas) {
+    this.w = 34;
+    this.h = 62;
+    this.x = TRACK_LEFT + TRACK_W / 2 - this.w / 2;
+    this.y = CANVAS_H - 140;
+    this.targetX = this.x;
+    this.speed   = 0;         // current scroll speed (px/frame)
+    this.baseSpeed = 3;
+    this.maxSpeed  = 12;
+    this.accel   = 0.06;
+    this.decel   = 0.09;
+    this.lateralSpeed = 0;
+    this.maxLateral   = 5;
+    this.lateralAccel = 0.8;
+    this.lives    = NUM_LIVES;
+    this.turbo    = TURBO_MAX;
+    this.turboOn  = false;
+    this.invincible  = false;
+    this.invTimer    = 0;
+    this.shielded    = false;
+    this.shieldTimer = 0;
+    this.multiplier  = 1;
+    this.multTimer   = 0;
+    this.flashTimer  = 0;
+    this.exploding   = false;
+    this.explodeTimer= 0;
+    this.explodeParticles = [];
+    this.canvas  = canvas;
+    // Wheel animation
+    this.wheelAngle = 0;
+  }
 
-/* 1. Try to upgrade driver grid from API */
-function apiLoadDrivers() {
-  apiFetch('/'+SEASON+'/drivers/?limit=40', function(dData) {
-    apiFetch('/'+SEASON+'/driverstandings/?limit=40', function(sData) {
-      if (!dData || !dData.MRData || !dData.MRData.DriverTable || !dData.MRData.DriverTable.Drivers.length) {
-        showBanner('api-drivers-banner','error','API unavailable for 2026 — showing hardcoded data');
-        return;
-      }
-      var apiDrivers = dData.MRData.DriverTable.Drivers;
-      if (sData && sData.MRData && sData.MRData.StandingsTable) {
-        var lists = sData.MRData.StandingsTable.StandingsLists;
-        if (lists && lists[0] && lists[0].DriverStandings) {
-          lists[0].DriverStandings.forEach(function(s) {
-            _conMap[s.Driver.driverId]  = s.Constructors&&s.Constructors[0] ? s.Constructors[0].constructorId : '';
-            _teamMap[s.Driver.driverId] = s.Constructors&&s.Constructors[0] ? s.Constructors[0].name : '';
-          });
-        }
-      }
-      _activeDrivers = apiDrivers;
-      buildFilterDropdowns();
-      renderDriverCards(apiDrivers);
-      document.getElementById('hs-drivers').textContent = apiDrivers.length;
-      showBanner('api-drivers-banner','success','Drivers upgraded from Jolpica F1 API');
-    });
-  });
-}
+  get centerX() { return this.x + this.w / 2; }
+  get centerY() { return this.y + this.h / 2; }
 
-/* 2. Try to upgrade teams grid from API */
-function apiLoadTeams() {
-  apiFetch('/'+SEASON+'/constructors/?limit=20', function(cData) {
-    apiFetch('/'+SEASON+'/constructorstandings/?limit=20', function(sData) {
-      if (!cData || !cData.MRData || !cData.MRData.ConstructorTable || !cData.MRData.ConstructorTable.Constructors.length) {
-        showBanner('api-teams-banner','error','API unavailable for 2026 — showing hardcoded data');
-        return;
-      }
-      var cons = cData.MRData.ConstructorTable.Constructors;
-      var standMap = {};
-      var topId    = '';
-      if (sData && sData.MRData && sData.MRData.StandingsTable) {
-        var lists = sData.MRData.StandingsTable.StandingsLists;
-        if (lists && lists[0] && lists[0].ConstructorStandings) {
-          lists[0].ConstructorStandings.forEach(function(s,i) {
-            standMap[s.Constructor.constructorId] = {pos:s.position, pts:s.points, wins:s.wins};
-            if (i===0) topId = s.Constructor.constructorId;
-          });
-        }
-      }
-      cons.sort(function(a,b){
-        return parseInt((standMap[a.constructorId]||{}).pos||99) - parseInt((standMap[b.constructorId]||{}).pos||99);
+  update(keys, dt) {
+    if (this.exploding) {
+      this.explodeTimer--;
+      this.explodeParticles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        p.vx *= 0.94; p.vy *= 0.94;
+        p.life--;
       });
-      renderTeams(cons, standMap, topId);
-      document.getElementById('hs-teams').textContent = cons.length;
-      showBanner('api-teams-banner','success','Teams upgraded from Jolpica F1 API');
-    });
-  });
-}
-
-/* 3. Try to upgrade schedule from API */
-function apiLoadSchedule() {
-  apiFetch('/'+SEASON+'/?limit=30', function(data) {
-    if (!data || !data.MRData || !data.MRData.RaceTable || !data.MRData.RaceTable.Races.length) {
-      showBanner('api-schedule-banner','error','API unavailable for 2026 — showing hardcoded schedule');
+      this.explodeParticles = this.explodeParticles.filter(p => p.life > 0);
       return;
     }
-    var races = data.MRData.RaceTable.Races;
-    _liveRaces = races;
-    renderSchedule(races);
-    document.getElementById('hs-races').textContent = races.length;
-    /* Re-run countdown with live data in case dates differ */
-    var now = Date.now();
-    for (var i=0;i<races.length;i++) {
-      var t = new Date((races[i].date||'')+'T'+(races[i].time||'14:00:00Z')).getTime();
-      if (t > now) {
-        var meta = getCircuitMeta(races[i].Circuit ? races[i].Circuit.circuitId : '');
-        document.getElementById('cd-race').textContent = meta.emoji+' '+races[i].raceName;
-        document.getElementById('cd-meta').textContent = 'Round '+races[i].round+' \u00b7 '+(races[i].Circuit?races[i].Circuit.circuitName:'')+' \u00b7 '+(races[i].Circuit&&races[i].Circuit.Location?races[i].Circuit.Location.locality+', '+races[i].Circuit.Location.country:'');
-        break;
-      }
+
+    /* Vertical speed */
+    const wantFast = keys['ArrowUp'] || keys['w'] || keys['W'];
+    const wantSlow = keys['ArrowDown'] || keys['s'] || keys['S'];
+    const turboActive = this.turboOn && this.turbo > 0;
+    const topSpeed = this.maxSpeed * (turboActive ? 1.7 : 1);
+
+    if (wantFast) {
+      this.speed = Math.min(this.speed + this.accel * dt, topSpeed);
+    } else if (wantSlow) {
+      this.speed = Math.max(this.speed - this.decel * dt, this.baseSpeed * 0.4);
+    } else {
+      this.speed = lerp(this.speed, this.baseSpeed, 0.04);
     }
-    showBanner('api-schedule-banner','success','Schedule upgraded from Jolpica F1 API');
-  });
+
+    /* Turbo meter */
+    if (turboActive) {
+      this.turbo = Math.max(0, this.turbo - TURBO_DRAIN);
+      if (this.turbo === 0) this.turboOn = false;
+    } else {
+      this.turbo = Math.min(TURBO_MAX, this.turbo + TURBO_REGEN);
+    }
+
+    /* Lateral movement */
+    const goLeft  = keys['ArrowLeft']  || keys['a'] || keys['A'];
+    const goRight = keys['ArrowRight'] || keys['d'] || keys['D'];
+    if (goLeft) {
+      this.lateralSpeed = Math.max(-this.maxLateral, this.lateralSpeed - this.lateralAccel);
+    } else if (goRight) {
+      this.lateralSpeed = Math.min(this.maxLateral, this.lateralSpeed + this.lateralAccel);
+    } else {
+      this.lateralSpeed *= 0.75;
+    }
+    this.x = clamp(this.x + this.lateralSpeed, TRACK_LEFT + 2, TRACK_LEFT + TRACK_W - this.w - 2);
+
+    /* Timers */
+    if (this.invincible) { this.invTimer--; if (this.invTimer <= 0) this.invincible = false; }
+    if (this.shielded)   { this.shieldTimer--; if (this.shieldTimer <= 0) { this.shielded = false; } }
+    if (this.multiplier > 1) { this.multTimer--; if (this.multTimer <= 0) this.multiplier = 1; }
+    if (this.flashTimer > 0) this.flashTimer--;
+
+    /* Wheel spin */
+    this.wheelAngle += this.speed * 0.25;
+  }
+
+  activateTurbo(audio) {
+    if (this.turbo < 15) return false;
+    this.turboOn = true;
+    if (audio) audio.playTurboActivate();
+    return true;
+  }
+
+  applyShield(duration) {
+    this.shielded   = true;
+    this.shieldTimer = duration;
+    this.invincible  = true;
+    this.invTimer    = duration;
+  }
+
+  applyMultiplier(mul, duration) {
+    this.multiplier = mul;
+    this.multTimer  = duration;
+  }
+
+  takeDamage() {
+    if (this.invincible || this.shielded) return false;
+    this.lives--;
+    this.invincible = true;
+    this.invTimer   = 120; // 2s invincibility after hit
+    this.flashTimer = 120;
+    if (this.lives <= 0) {
+      this.explode();
+      return true; // dead
+    }
+    return false;
+  }
+
+  explode() {
+    this.exploding = true;
+    this.explodeTimer = 80;
+    for (let i = 0; i < 28; i++) {
+      const angle = (Math.PI * 2 * i) / 28 + rand(-0.3, 0.3);
+      const speed = rand(1.5, 6);
+      this.explodeParticles.push({
+        x: this.centerX, y: this.centerY,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        r: rand(3, 10),
+        color: ['#E10600','#FF6B35','#FFD700','#fff','#333'][randInt(0,4)],
+        life: randInt(30, 70)
+      });
+    }
+  }
+
+  draw(ctx, weather) {
+    if (this.exploding) {
+      this._drawExplosion(ctx);
+      return;
+    }
+
+    /* Flash when invincible */
+    if (this.flashTimer > 0 && Math.floor(this.flashTimer / 6) % 2 === 0) return;
+
+    ctx.save();
+    ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+
+    /* Shield ring */
+    if (this.shielded) {
+      const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 150);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, this.w * 0.85 + pulse * 6, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(59, 130, 246, ${0.5 + pulse * 0.4})`;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#3B82F6';
+      ctx.shadowBlur  = 14 * pulse;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    /* Turbo glow */
+    if (this.turboOn) {
+      ctx.save();
+      const tpulse = 0.5 + 0.5 * Math.sin(Date.now() / 80);
+      ctx.shadowColor = '#FF6B35';
+      ctx.shadowBlur  = 24 * tpulse;
+      ctx.restore();
+    }
+
+    /* Rain effect smear */
+    if (weather === 'WET' || weather === 'STORM') {
+      ctx.save();
+      ctx.globalAlpha = 0.22;
+      ctx.beginPath();
+      ctx.ellipse(0, -this.h * 0.1, this.w * 0.55, this.h * 0.38, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(100,160,255,0.4)';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    this._drawF1Car(ctx);
+    ctx.restore();
+  }
+
+  _drawF1Car(ctx) {
+    const W = this.w, H = this.h;
+    const hw = W / 2, hh = H / 2;
+
+    /* Shadow */
+    ctx.save();
+    ctx.translate(4, 6);
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, hw, hh * 0.6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.restore();
+
+    /* === REAR WING === */
+    ctx.fillStyle = '#B30500';
+    ctx.beginPath();
+    ctx.rect(-hw - 4, hh - 10, W + 8, 5);
+    ctx.fill();
+    // end plates
+    ctx.fillRect(-hw - 4, hh - 14, 5, 9);
+    ctx.fillRect(hw - 1, hh - 14, 5, 9);
+
+    /* === BODY — main pod === */
+    ctx.fillStyle = '#E10600';
+    ctx.beginPath();
+    ctx.moveTo(-9, hh - 14);
+    ctx.lineTo(-11, 0);
+    ctx.lineTo(-8, -hh + 8);
+    ctx.lineTo(0, -hh + 2);
+    ctx.lineTo(8, -hh + 8);
+    ctx.lineTo(11, 0);
+    ctx.lineTo(9, hh - 14);
+    ctx.closePath();
+    ctx.fill();
+
+    /* === COCKPIT === */
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.ellipse(0, -hh * 0.15, 6, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    /* === COCKPIT VISOR === */
+    ctx.fillStyle = 'rgba(80,180,255,0.75)';
+    ctx.beginPath();
+    ctx.ellipse(0, -hh * 0.22, 4.5, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    /* === FRONT NOSE === */
+    ctx.fillStyle = '#B30500';
+    ctx.beginPath();
+    ctx.moveTo(-6, -hh + 10);
+    ctx.lineTo(-3, -hh - 4);
+    ctx.lineTo(3,  -hh - 4);
+    ctx.lineTo(6,  -hh + 10);
+    ctx.closePath();
+    ctx.fill();
+
+    /* === FRONT WING === */
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.rect(-hw + 2, -hh + 2, W - 4, 7);
+    ctx.fill();
+    // end plates
+    ctx.fillRect(-hw - 3, -hh - 2, 5, 12);
+    ctx.fillRect(hw - 2,  -hh - 2, 5, 12);
+
+    /* === SIDEPODS === */
+    ctx.fillStyle = '#CC0500';
+    // left
+    ctx.beginPath();
+    ctx.moveTo(-hw, hh * 0.1);
+    ctx.lineTo(-hw - 2, -hh * 0.25);
+    ctx.lineTo(-7, -hh * 0.35);
+    ctx.lineTo(-7, hh * 0.15);
+    ctx.closePath();
+    ctx.fill();
+    // right
+    ctx.beginPath();
+    ctx.moveTo(hw, hh * 0.1);
+    ctx.lineTo(hw + 2, -hh * 0.25);
+    ctx.lineTo(7, -hh * 0.35);
+    ctx.lineTo(7, hh * 0.15);
+    ctx.closePath();
+    ctx.fill();
+
+    /* === WHEELS === */
+    const wRadius = 8, wW = 5;
+    const wheelPositions = [
+      { x: -hw - 1, y: -hh * 0.45 },  // FL
+      { x:  hw - wW + 1, y: -hh * 0.45 },  // FR
+      { x: -hw - 1, y:  hh * 0.35 },  // RL
+      { x:  hw - wW + 1, y:  hh * 0.35 },  // RR
+    ];
+    wheelPositions.forEach(({ x, y }) => {
+      ctx.save();
+      ctx.translate(x + wW / 2, y);
+      ctx.rotate(this.wheelAngle);
+      // tyre
+      ctx.beginPath();
+      ctx.arc(0, 0, wRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#222';
+      ctx.fill();
+      // rim
+      ctx.beginPath();
+      ctx.arc(0, 0, wRadius * 0.55, 0, Math.PI * 2);
+      ctx.fillStyle = '#ddd';
+      ctx.fill();
+      // spokes
+      ctx.strokeStyle = '#888';
+      ctx.lineWidth = 1.2;
+      for (let s = 0; s < 5; s++) {
+        const a = (s / 5) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * wRadius * 0.48, Math.sin(a) * wRadius * 0.48);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+
+    /* === TURBO EXHAUST FLAME === */
+    if (this.turboOn && this.turbo > 0) {
+      ctx.save();
+      const ft = Date.now() / 60;
+      const fx = 0, fy = hh + 6 + Math.sin(ft) * 3;
+      const flameH = 14 + Math.sin(ft * 2.5) * 6;
+      const grad = ctx.createLinearGradient(fx, fy, fx, fy + flameH);
+      grad.addColorStop(0, 'rgba(255,180,30,0.95)');
+      grad.addColorStop(0.5, 'rgba(255,80,0,0.7)');
+      grad.addColorStop(1, 'rgba(255,50,0,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(-4, fy); ctx.lineTo(4, fy);
+      ctx.lineTo(2 + Math.sin(ft) * 1.5, fy + flameH);
+      ctx.lineTo(-2 + Math.sin(ft + 1) * 1.5, fy + flameH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    /* === NUMBER DECAL === */
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px Barlow Condensed, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('01', 0, hh * 0.62);
+  }
+
+  _drawExplosion(ctx) {
+    this.explodeParticles.forEach(p => {
+      ctx.save();
+      ctx.globalAlpha = p.life / 60;
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    // Central flash
+    const alpha = Math.min(1, this.explodeTimer / 20);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const grad = ctx.createRadialGradient(
+      this.explodeParticles[0]?.x || CANVAS_W/2, this.explodeParticles[0]?.y || CANVAS_H/2, 0,
+      this.explodeParticles[0]?.x || CANVAS_W/2, this.explodeParticles[0]?.y || CANVAS_H/2, 40
+    );
+    grad.addColorStop(0, 'rgba(255,220,50,0.9)');
+    grad.addColorStop(0.4, 'rgba(255,80,0,0.6)');
+    grad.addColorStop(1, 'rgba(255,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(
+      this.explodeParticles[0]?.x || CANVAS_W/2,
+      this.explodeParticles[0]?.y || CANVAS_H/2,
+      40, 0, Math.PI * 2
+    );
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
-/* 4. Try to upgrade standings from API */
-function apiLoadStandings() {
-  apiFetch('/'+SEASON+'/driverstandings/?limit=40', function(dData) {
-    if (dData && dData.MRData && dData.MRData.StandingsTable) {
-      var lists = dData.MRData.StandingsTable.StandingsLists;
-      if (lists && lists[0] && lists[0].DriverStandings && lists[0].DriverStandings.length) {
-        renderDriverStandings(lists[0].DriverStandings);
-        var pill = document.getElementById('drv-live-pill');
-        if (pill) pill.style.display='inline';
-        document.getElementById('drv-src').textContent = 'Live via Jolpica F1 API \u00b7 After Round '+lists[0].round;
+/* ════════════════════════════════════════════════════════════
+   AI CAR
+════════════════════════════════════════════════════════════ */
+class AICar {
+  constructor(lane, speed, gameSpeed, circuitIdx) {
+    this.w  = 32;
+    this.h  = 58;
+    this.lane = lane;
+    this.x  = TRACK_LEFT + lane * LANE_W + (LANE_W - this.w) / 2;
+    this.y  = -this.h - rand(0, 80);
+    this.speed = speed;
+    this.passed  = false;
+    this.counted = false;
+    this.wobble  = 0;
+    this.wobbleDir = 1;
+    // Visual variety
+    const COLORS = ['#1565C0','#2E7D32','#F57F17','#6A1B9A','#00838F','#4E342E'];
+    this.bodyColor  = COLORS[randInt(0, COLORS.length - 1)];
+    this.numLabel   = String(randInt(2, 99));
+    this.wheelAngle = 0;
+    this.circuitIdx = circuitIdx;
+  }
+
+  update(gameSpeed) {
+    this.y += this.speed + gameSpeed;
+    // Slight random lateral wobble
+    this.wobble += 0.04 * this.wobbleDir;
+    if (Math.abs(this.wobble) > 1.5) this.wobbleDir *= -1;
+    this.x = TRACK_LEFT + this.lane * LANE_W + (LANE_W - this.w) / 2 + this.wobble;
+    this.wheelAngle += (this.speed + gameSpeed) * 0.22;
+  }
+
+  isOffScreen() { return this.y > CANVAS_H + 20; }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+    this._drawF1Car(ctx);
+    ctx.restore();
+  }
+
+  _drawF1Car(ctx) {
+    const W = this.w, H = this.h;
+    const hw = W / 2, hh = H / 2;
+    const col = this.bodyColor;
+
+    /* Shadow */
+    ctx.save(); ctx.globalAlpha = 0.15;
+    ctx.beginPath(); ctx.ellipse(3, 5, hw * 0.8, hh * 0.55, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#000'; ctx.fill();
+    ctx.restore();
+
+    /* Rear wing */
+    ctx.fillStyle = col;
+    ctx.fillRect(-hw - 3, hh - 10, W + 6, 4);
+    ctx.fillRect(-hw - 3, hh - 14, 4, 8);
+    ctx.fillRect(hw - 1, hh - 14, 4, 8);
+
+    /* Body */
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(-8, hh - 12); ctx.lineTo(-10, 0);
+    ctx.lineTo(-7, -hh + 8); ctx.lineTo(0, -hh + 2);
+    ctx.lineTo(7, -hh + 8);  ctx.lineTo(10, 0);
+    ctx.lineTo(8, hh - 12); ctx.closePath();
+    ctx.fill();
+
+    /* Sidepods */
+    ctx.fillStyle = this._darken(col, 0.15);
+    ctx.beginPath();
+    ctx.moveTo(-hw, hh * 0.1); ctx.lineTo(-hw, -hh * 0.28);
+    ctx.lineTo(-6, -hh * 0.38); ctx.lineTo(-6, hh * 0.14);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(hw, hh * 0.1); ctx.lineTo(hw, -hh * 0.28);
+    ctx.lineTo(6, -hh * 0.38); ctx.lineTo(6, hh * 0.14);
+    ctx.closePath(); ctx.fill();
+
+    /* Cockpit */
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.ellipse(0, -hh * 0.1, 5.5, 11, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(80,180,255,0.6)';
+    ctx.beginPath(); ctx.ellipse(0, -hh * 0.18, 4, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+    /* Front nose */
+    ctx.fillStyle = this._darken(col, 0.2);
+    ctx.beginPath();
+    ctx.moveTo(-5, -hh + 10); ctx.lineTo(-3, -hh - 3);
+    ctx.lineTo(3, -hh - 3); ctx.lineTo(5, -hh + 10);
+    ctx.closePath(); ctx.fill();
+
+    /* Front wing */
+    ctx.fillStyle = '#111';
+    ctx.fillRect(-hw + 2, -hh + 2, W - 4, 6);
+    ctx.fillRect(-hw - 2, -hh - 1, 4, 10);
+    ctx.fillRect(hw - 2, -hh - 1, 4, 10);
+
+    /* Wheels */
+    [{ x: -hw - 1, y: -hh * 0.42 }, { x: hw - 5, y: -hh * 0.42 },
+     { x: -hw - 1, y:  hh * 0.32 }, { x: hw - 5, y:  hh * 0.32 }
+    ].forEach(({ x, y }) => {
+      ctx.save();
+      ctx.translate(x + 4, y);
+      ctx.rotate(this.wheelAngle);
+      ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#222'; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, 3.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#ccc'; ctx.fill();
+      ctx.restore();
+    });
+
+    /* Number */
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 8px Barlow Condensed, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(this.numLabel, 0, hh * 0.58);
+  }
+
+  _darken(hex, factor) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgb(${Math.floor(r*(1-factor))},${Math.floor(g*(1-factor))},${Math.floor(b*(1-factor))})`;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   POWER-UP
+════════════════════════════════════════════════════════════ */
+class PowerUp {
+  constructor(lane) {
+    this.w     = 32;
+    this.h     = 32;
+    this.lane  = lane;
+    this.x     = TRACK_LEFT + lane * LANE_W + (LANE_W - this.w) / 2;
+    this.y     = -this.h;
+    this.speed = 2.5;
+    const types = ['turbo', 'shield', 'multiplier'];
+    this.type  = types[randInt(0, 2)];
+    this.bob   = 0;
+    this.spin  = 0;
+    this.collected = false;
+    this.collectAnim = 0;
+  }
+
+  get color() {
+    return { turbo:'#FF6B35', shield:'#3B82F6', multiplier:'#10B981' }[this.type];
+  }
+  get label() {
+    return { turbo:'T', shield:'S', multiplier:'×2' }[this.type];
+  }
+
+  update(gameSpeed) {
+    if (this.collected) { this.collectAnim++; return; }
+    this.y += this.speed + gameSpeed * 0.4;
+    this.bob  = Math.sin(Date.now() / 300) * 4;
+    this.spin += 0.04;
+  }
+
+  isOffScreen() { return this.y > CANVAS_H + 20; }
+
+  collect() { this.collected = true; }
+
+  draw(ctx) {
+    if (this.collected) {
+      const a = 1 - this.collectAnim / 25;
+      if (a <= 0) return;
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(this.x + this.w / 2, this.y - this.collectAnim * 2);
+      ctx.fillStyle = this.color;
+      ctx.font = 'bold 14px Barlow Condensed';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('+' + (this.type === 'turbo' ? 'TURBO' : this.type === 'shield' ? 'SHIELD' : '×2'), 0, 0);
+      ctx.restore();
+      return;
+    }
+
+    ctx.save();
+    ctx.translate(this.x + this.w / 2, this.y + this.h / 2 + this.bob);
+    ctx.rotate(this.spin);
+
+    // Glow
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur  = 16;
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(0, 0, this.w / 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 3;
+    ctx.fill();
+    ctx.stroke();
+
+    // Icon
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = this.color;
+    ctx.font = 'bold 13px Barlow Condensed, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.label, 0, 0);
+
+    ctx.restore();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   GAME CLASS (main orchestrator)
+════════════════════════════════════════════════════════════ */
+class Game {
+  constructor() {
+    this.canvas  = document.getElementById('gameCanvas');
+    this.ctx     = this.canvas.getContext('2d');
+    this.audio   = new AudioEngine();
+    this.state   = 'menu'; // menu | playing | paused | gameover
+    this.raf     = null;
+
+    /* Circuit / environment */
+    this.circuitIdx  = 0;
+    this.circuitDist = 0;  // scroll meters
+    this.lapDist     = 4000;
+    this.lap         = 1;
+    this.weather     = 'DRY';
+    this.weatherTimer= 0;
+    this.rainDrops   = [];
+
+    /* Scrolling road */
+    this.roadOffset  = 0;
+    this.dashOffset  = 0;
+    this.grassOffset = 0;
+
+    /* Game progression */
+    this.gameSpeed   = 3;       // base scroll speed
+    this.speedTarget = 3;
+    this.score       = 0;
+    this.scoreAccum  = 0;       // accumulator for per-meter points
+    this.multiplier  = 1;
+
+    /* Objects */
+    this.player     = null;
+    this.aiCars     = [];
+    this.powerUps   = [];
+    this.particles  = [];       // road sparks etc.
+
+    /* Spawn timers */
+    this.aiSpawnTimer  = 0;
+    this.aiSpawnRate   = 90;    // frames between spawns
+    this.puSpawnTimer  = 0;
+    this.puSpawnRate   = 300;
+
+    /* Input */
+    this.keys       = {};
+    this.touchState = { left: false, right: false, boost: false };
+
+    /* Stats */
+    this.bestScore  = parseInt(localStorage.getItem('f1rush_best') || '0');
+    this.highScores = JSON.parse(localStorage.getItem('f1rush_scores') || '[]');
+
+    /* Speed lines (decorative) */
+    this.speedLines = Array.from({length: 20}, () => ({
+      x: rand(0, CANVAS_W), y: rand(0, CANVAS_H),
+      len: rand(20, 60), speed: rand(8, 18)
+    }));
+
+    this._bindEvents();
+    this._initMenuUI();
+    this._drawPreviewCar();
+    this._showScreen('mainMenu');
+  }
+
+  /* ── BIND EVENTS ── */
+  _bindEvents() {
+    window.addEventListener('keydown', e => {
+      this.keys[e.key] = true;
+      this.audio.resume();
+
+      if (this.state === 'playing') {
+        if (e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          if (this.player) this.player.activateTurbo(this.audio);
+        }
+        if (e.key === 'p' || e.key === 'P') this._pause();
+        if (e.key === 'r' || e.key === 'R') { if (this.state !== 'playing') this._restart(); }
+      } else if (this.state === 'paused') {
+        if (e.key === 'p' || e.key === 'P') this._resume();
+      } else if (this.state === 'gameover') {
+        if (e.key === 'r' || e.key === 'R') this._restart();
+      }
+    });
+    window.addEventListener('keyup', e => { this.keys[e.key] = false; });
+
+    /* Touch controls */
+    const bindTouch = (id, stateKey) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('touchstart', e => { e.preventDefault(); this.touchState[stateKey] = true; this.audio.resume(); }, { passive: false });
+      btn.addEventListener('touchend', e => { e.preventDefault(); this.touchState[stateKey] = false; });
+    };
+    bindTouch('tLeft', 'left');
+    bindTouch('tRight', 'right');
+    bindTouch('tBoost', 'boost');
+  }
+
+  _initMenuUI() {
+    /* Menu buttons */
+    document.getElementById('btnStart').addEventListener('click', () => { this.audio.resume(); this.audio.playMenuClick(); this._startGame(); });
+    document.getElementById('btnInstructions').addEventListener('click', () => { this.audio.playMenuClick(); this._showScreen('instructionsScreen'); });
+    document.getElementById('btnHighScores').addEventListener('click', () => { this.audio.playMenuClick(); this._renderHighScores(); this._showScreen('highScoresScreen'); });
+    document.getElementById('btnBackInst').addEventListener('click', () => { this.audio.playMenuClick(); this._showScreen('mainMenu'); });
+    document.getElementById('btnBackScores').addEventListener('click', () => { this.audio.playMenuClick(); this._showScreen('mainMenu'); });
+    document.getElementById('btnClearScores').addEventListener('click', () => {
+      this.audio.playMenuClick();
+      this.highScores = [];
+      localStorage.removeItem('f1rush_scores');
+      this._renderHighScores();
+    });
+    document.getElementById('btnResume').addEventListener('click', () => { this.audio.playMenuClick(); this._resume(); });
+    document.getElementById('btnPauseMenu').addEventListener('click', () => { this.audio.playMenuClick(); this._goMenu(); });
+    document.getElementById('btnRestart').addEventListener('click', () => { this.audio.playMenuClick(); this._restart(); });
+    document.getElementById('btnGoMenu').addEventListener('click', () => { this.audio.playMenuClick(); this._goMenu(); });
+  }
+
+  _showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  _drawPreviewCar() {
+    const cv = document.getElementById('previewCanvas');
+    if (!cv) return;
+    const cx = cv.getContext('2d');
+    // Temp player car just for preview
+    const tmp = new PlayerCar(cv);
+    cx.clearRect(0, 0, cv.width, cv.height);
+    cx.translate(cv.width / 2, cv.height / 2);
+    tmp._drawF1Car(cx);
+  }
+
+  /* ── GAME LIFECYCLE ── */
+  _startGame() {
+    this.state       = 'playing';
+    this.circuitIdx  = 0;
+    this.circuitDist = 0;
+    this.lap         = 1;
+    this.score       = 0;
+    this.scoreAccum  = 0;
+    this.gameSpeed   = 3;
+    this.speedTarget = 3;
+    this.aiCars      = [];
+    this.powerUps    = [];
+    this.particles   = [];
+    this.weather     = 'DRY';
+    this.weatherTimer= 0;
+    this.rainDrops   = [];
+    this.aiSpawnTimer= 0;
+    this.aiSpawnRate = 90;
+    this.puSpawnTimer= 0;
+    this.roadOffset  = 0;
+
+    this.player = new PlayerCar(this.canvas);
+
+    this._showScreen('gameScreen');
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    document.getElementById('gameOverOverlay').classList.add('hidden');
+
+    this._updateHUD();
+    this._flashCircuit();
+
+    this.audio.startEngine();
+
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this._loop();
+  }
+
+  _pause() {
+    if (this.state !== 'playing') return;
+    this.state = 'paused';
+    document.getElementById('pauseOverlay').classList.remove('hidden');
+    this.audio.stopEngine();
+    if (this.raf) { cancelAnimationFrame(this.raf); this.raf = null; }
+  }
+
+  _resume() {
+    if (this.state !== 'paused') return;
+    this.state = 'playing';
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    this.audio.startEngine();
+    this._loop();
+  }
+
+  _gameOver() {
+    this.state = 'gameover';
+    this.audio.stopEngine();
+    this.audio.playCrash();
+
+    /* Save score */
+    const isNew = this.score > this.bestScore;
+    if (isNew) {
+      this.bestScore = this.score;
+      localStorage.setItem('f1rush_best', this.bestScore);
+    }
+    this.highScores.push({ score: this.score, date: new Date().toLocaleDateString() });
+    this.highScores.sort((a, b) => b.score - a.score);
+    this.highScores = this.highScores.slice(0, 10);
+    localStorage.setItem('f1rush_scores', JSON.stringify(this.highScores));
+
+    /* Show game over screen after explosion */
+    setTimeout(() => {
+      document.getElementById('goScore').textContent = this.score;
+      document.getElementById('goBest').textContent  = this.bestScore;
+      document.getElementById('menuBest').textContent = this.bestScore;
+      const nr = document.getElementById('newRecord');
+      if (isNew) nr.classList.remove('hidden');
+      else       nr.classList.add('hidden');
+      document.getElementById('gameOverOverlay').classList.remove('hidden');
+    }, 1200);
+  }
+
+  _restart() {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    this.raf = null;
+    this._startGame();
+  }
+
+  _goMenu() {
+    this.state = 'menu';
+    this.audio.stopEngine();
+    if (this.raf) { cancelAnimationFrame(this.raf); this.raf = null; }
+    document.getElementById('menuBest').textContent = this.bestScore;
+    this._showScreen('mainMenu');
+  }
+
+  /* ── MAIN LOOP ── */
+  _loop() {
+    this.raf = requestAnimationFrame(() => this._loop());
+    if (this.state !== 'playing') return;
+    this._update();
+    this._draw();
+  }
+
+  /* ── UPDATE ── */
+  _update() {
+    const p = this.player;
+
+    /* Sync touch to keys */
+    this.keys['ArrowLeft']  = this.keys['ArrowLeft']  || this.touchState.left;
+    this.keys['ArrowRight'] = this.keys['ArrowRight'] || this.touchState.right;
+    if (this.touchState.boost && p) p.activateTurbo(this.audio);
+
+    /* Ramp up game speed over time */
+    this.speedTarget = 3 + Math.min(this.circuitDist / 1200, 9);
+    this.gameSpeed   = lerp(this.gameSpeed, this.speedTarget, 0.004);
+
+    /* Scroll offsets */
+    const scrollRate = this.gameSpeed + (p ? p.speed : 0);
+    this.roadOffset  = (this.roadOffset  + scrollRate)  % 80;
+    this.grassOffset = (this.grassOffset + scrollRate * 0.6) % 60;
+
+    /* Distance & laps */
+    this.circuitDist += scrollRate * 0.15;
+    if (this.circuitDist >= this.lapDist) {
+      this.circuitDist -= this.lapDist;
+      this.lap++;
+      // Change circuit every 3 laps
+      const newCircuit = ((this.lap - 1) % (CIRCUITS.length * 3)) < 3 ? 0
+        : ((this.lap - 1) % (CIRCUITS.length * 3)) < 6 ? 1 : 2;
+      if (newCircuit !== this.circuitIdx) {
+        this.circuitIdx = newCircuit;
+        this._flashCircuit();
+      }
+      // Random weather change
+      if (Math.random() < 0.4) {
+        this.weather = WEATHER_TYPES[randInt(0, WEATHER_TYPES.length - 1)];
       }
     }
-  });
-  apiFetch('/'+SEASON+'/constructorstandings/?limit=20', function(cData) {
-    if (cData && cData.MRData && cData.MRData.StandingsTable) {
-      var lists = cData.MRData.StandingsTable.StandingsLists;
-      if (lists && lists[0] && lists[0].ConstructorStandings && lists[0].ConstructorStandings.length) {
-        var rows = lists[0].ConstructorStandings.map(function(s) {
-          return { pos:parseInt(s.position), name:s.Constructor.name, constructorId:s.Constructor.constructorId, pts:s.points, wins:s.wins };
+
+    /* Score per distance */
+    this.scoreAccum += scrollRate;
+    if (this.scoreAccum >= 100) {
+      const gained = Math.floor(this.scoreAccum / 100) * PTS_METER;
+      this.score += gained * (p ? p.multiplier : 1);
+      this.scoreAccum %= 100;
+    }
+
+    /* Rain */
+    if (this.weather !== 'DRY') {
+      const count = this.weather === 'STORM' ? 6 : 3;
+      for (let i = 0; i < count; i++) {
+        this.rainDrops.push({
+          x: rand(0, CANVAS_W), y: -10,
+          vx: rand(-1, 1), vy: rand(10, 18),
+          len: rand(8, 18), alpha: rand(0.3, 0.7), life: 1
         });
-        renderConstructorStandings(rows);
-        var pill = document.getElementById('con-live-pill');
-        if (pill) pill.style.display='inline';
-        document.getElementById('con-src').textContent = 'Live via Jolpica F1 API \u00b7 After Round '+lists[0].round;
+      }
+      this.rainDrops.forEach(d => { d.x += d.vx; d.y += d.vy; d.life -= 0.04; });
+      this.rainDrops = this.rainDrops.filter(d => d.life > 0 && d.y < CANVAS_H + 20);
+    } else {
+      this.rainDrops = [];
+    }
+
+    /* Player update */
+    if (p && !p.exploding) {
+      p.update(this.keys, 60);
+    }
+
+    /* Spawn AI */
+    this.aiSpawnTimer++;
+    this.aiSpawnRate = Math.max(25, 90 - this.lap * 5);
+    if (this.aiSpawnTimer >= this.aiSpawnRate) {
+      this.aiSpawnTimer = 0;
+      const occupiedLanes = new Set(this.aiCars.filter(c => c.y < 200).map(c => c.lane));
+      const freeLanes = [0,1,2,3].filter(l => !occupiedLanes.has(l));
+      if (freeLanes.length > 0) {
+        const lane  = freeLanes[randInt(0, freeLanes.length - 1)];
+        const speed = rand(1.5, 3 + this.lap * 0.25);
+        this.aiCars.push(new AICar(lane, speed, this.gameSpeed, this.circuitIdx));
       }
     }
-  });
+
+    /* Update AI */
+    this.aiCars.forEach(c => c.update(this.gameSpeed));
+    this.aiCars = this.aiCars.filter(c => !c.isOffScreen());
+
+    /* Overtake scoring */
+    this.aiCars.forEach(c => {
+      if (!c.counted && p && c.y > p.y + p.h) {
+        c.counted = true;
+        this.score += PTS_OVERTAKE * (p.multiplier);
+        this.audio.playOvertake();
+      }
+    });
+
+    /* Spawn power-ups */
+    this.puSpawnTimer++;
+    if (this.puSpawnTimer >= this.puSpawnRate) {
+      this.puSpawnTimer = 0;
+      this.puSpawnRate  = randInt(200, 400);
+      const lane = randInt(0, 3);
+      this.powerUps.push(new PowerUp(lane));
+    }
+
+    /* Update power-ups */
+    this.powerUps.forEach(pu => pu.update(this.gameSpeed));
+    this.powerUps = this.powerUps.filter(pu => !pu.isOffScreen() && pu.collectAnim < 30);
+
+    /* Collision: player vs AI */
+    if (p && !p.exploding && !p.invincible) {
+      this.aiCars.forEach(c => {
+        if (rectOverlap(p.x + 3, p.y + 4, p.w - 6, p.h - 8, c.x + 3, c.y + 4, c.w - 6, c.h - 8)) {
+          const dead = p.takeDamage();
+          if (dead) {
+            this.audio.playCrash();
+            setTimeout(() => this._gameOver(), 900);
+          } else {
+            this.audio.playCrash();
+          }
+          // Nudge AI out
+          c.y -= 20;
+        }
+      });
+    }
+
+    /* Collision: player vs power-up */
+    if (p && !p.exploding) {
+      this.powerUps.forEach(pu => {
+        if (pu.collected) return;
+        if (rectOverlap(p.x, p.y, p.w, p.h, pu.x, pu.y, pu.w, pu.h)) {
+          pu.collect();
+          this.score += PTS_POWERUP * p.multiplier;
+          this.audio.playPowerUp(pu.type);
+          if (pu.type === 'turbo') {
+            p.turbo = TURBO_MAX;
+            p.activateTurbo(this.audio);
+          } else if (pu.type === 'shield') {
+            p.applyShield(300);
+          } else {
+            p.applyMultiplier(2, 480);
+          }
+          this._updateActivePowerup(pu.type);
+        }
+      });
+    }
+
+    /* Speed lines */
+    this.speedLines.forEach(l => {
+      l.y += l.speed * (this.gameSpeed / 3);
+      if (l.y > CANVAS_H) { l.y = -l.len; l.x = rand(0, CANVAS_W); }
+    });
+
+    /* Engine audio feedback */
+    if (p) {
+      this.audio.setEngineRPM(p.speed / p.maxSpeed);
+    }
+
+    this._updateHUD();
+  }
+
+  /* ── DRAW ── */
+  _draw() {
+    const ctx = this.ctx;
+    const circuit = CIRCUITS[this.circuitIdx];
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+    this._drawTrack(ctx, circuit);
+    this._drawSpeedLines(ctx);
+    if (this.weather !== 'DRY') this._drawRain(ctx);
+
+    // Power-ups (below cars)
+    this.powerUps.forEach(pu => pu.draw(ctx));
+
+    // AI cars
+    this.aiCars.forEach(c => c.draw(ctx));
+
+    // Player
+    if (this.player) {
+      this.player.draw(ctx, this.weather);
+    }
+  }
+
+  /* ── DRAW TRACK ── */
+  _drawTrack(ctx, circuit) {
+    const t = circuit.theme;
+
+    /* Grass left */
+    ctx.fillStyle = t.grass;
+    ctx.fillRect(0, 0, TRACK_LEFT, CANVAS_H);
+
+    /* Grass right */
+    ctx.fillRect(TRACK_LEFT + TRACK_W, 0, CANVAS_W - TRACK_LEFT - TRACK_W, CANVAS_H);
+
+    /* Grass texture stripes */
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    for (let y = -60 + (this.grassOffset % 60); y < CANVAS_H; y += 60) {
+      ctx.fillRect(0, y, TRACK_LEFT, 30);
+      ctx.fillRect(TRACK_LEFT + TRACK_W, y, CANVAS_W - TRACK_LEFT - TRACK_W, 30);
+    }
+
+    /* Asphalt */
+    ctx.fillStyle = t.asphalt;
+    ctx.fillRect(TRACK_LEFT, 0, TRACK_W, CANVAS_H);
+
+    /* Track vignette */
+    const tvg = ctx.createLinearGradient(TRACK_LEFT, 0, TRACK_LEFT + TRACK_W, 0);
+    tvg.addColorStop(0, 'rgba(0,0,0,0.08)');
+    tvg.addColorStop(0.08, 'rgba(0,0,0,0)');
+    tvg.addColorStop(0.92, 'rgba(0,0,0,0)');
+    tvg.addColorStop(1, 'rgba(0,0,0,0.08)');
+    ctx.fillStyle = tvg;
+    ctx.fillRect(TRACK_LEFT, 0, TRACK_W, CANVAS_H);
+
+    /* Animated centre dashes */
+    ctx.strokeStyle = t.line;
+    ctx.lineWidth   = 3;
+    ctx.setLineDash([40, 40]);
+    ctx.lineDashOffset = -this.roadOffset;
+    ctx.beginPath();
+    ctx.moveTo(TRACK_LEFT + TRACK_W / 2, 0);
+    ctx.lineTo(TRACK_LEFT + TRACK_W / 2, CANVAS_H);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Lane dividers (thin dashes) */
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([20, 30]);
+    ctx.lineDashOffset = -this.roadOffset;
+    for (let l = 1; l < LANE_COUNT; l++) {
+      if (l === LANE_COUNT / 2) continue;
+      const lx = TRACK_LEFT + l * LANE_W;
+      ctx.beginPath();
+      ctx.moveTo(lx, 0);
+      ctx.lineTo(lx, CANVAS_H);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    /* Track borders */
+    ctx.fillStyle = '#333';
+    ctx.fillRect(TRACK_LEFT - 2, 0, 2, CANVAS_H);
+    ctx.fillRect(TRACK_LEFT + TRACK_W, 0, 2, CANVAS_H);
+
+    /* Kerb stripes */
+    this._drawKerbs(ctx, t.barrier);
+
+    /* Armco barriers */
+    ctx.fillStyle = '#BBBBBB';
+    ctx.fillRect(TRACK_LEFT - 10, 0, 8, CANVAS_H);
+    ctx.fillRect(TRACK_LEFT + TRACK_W + 2, 0, 8, CANVAS_H);
+    // Barrier red/white stripes
+    ctx.fillStyle = t.barrier;
+    for (let ky = -(this.roadOffset % 40); ky < CANVAS_H; ky += 40) {
+      ctx.fillRect(TRACK_LEFT - 10, ky, 8, 20);
+      ctx.fillRect(TRACK_LEFT + TRACK_W + 2, ky + 20, 8, 20);
+    }
+  }
+
+  _drawKerbs(ctx, color) {
+    const kw = 10;
+    const stripeH = 18;
+    for (let ky = -(this.roadOffset % (stripeH * 2)); ky < CANVAS_H; ky += stripeH * 2) {
+      ctx.fillStyle = color;
+      ctx.fillRect(TRACK_LEFT - kw - 2, ky, kw, stripeH);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(TRACK_LEFT - kw - 2, ky + stripeH, kw, stripeH);
+      ctx.fillStyle = color;
+      ctx.fillRect(TRACK_LEFT + TRACK_W + 2, ky + stripeH, kw, stripeH);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(TRACK_LEFT + TRACK_W + 2, ky, kw, stripeH);
+    }
+  }
+
+  _drawSpeedLines(ctx) {
+    if (!this.player) return;
+    const speedFactor = this.player.speed / this.player.maxSpeed;
+    if (speedFactor < 0.45) return;
+    ctx.save();
+    ctx.globalAlpha = (speedFactor - 0.45) * 0.35;
+    ctx.strokeStyle = 'rgba(80,80,80,0.25)';
+    ctx.lineWidth = 1;
+    this.speedLines.forEach(l => {
+      const alpha = (speedFactor - 0.45) * 0.4;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(l.x, l.y);
+      ctx.lineTo(l.x, l.y + l.len * speedFactor);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  _drawRain(ctx) {
+    ctx.save();
+    ctx.strokeStyle = this.weather === 'STORM' ? 'rgba(180,210,255,0.7)' : 'rgba(180,210,255,0.45)';
+    ctx.lineWidth = 1;
+    this.rainDrops.forEach(d => {
+      ctx.globalAlpha = d.alpha * d.life;
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x + d.vx * 2, d.y + d.len);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  /* ── HUD UPDATE ── */
+  _updateHUD() {
+    const p = this.player;
+    if (!p) return;
+
+    document.getElementById('hudScore').textContent  = this.score;
+    document.getElementById('hudBest').textContent   = Math.max(this.score, this.bestScore);
+    document.getElementById('hudLap').textContent    = this.lap;
+    document.getElementById('hudSpeed').textContent  = Math.round(180 + p.speed * 28);
+    document.getElementById('hudCircuit').textContent= CIRCUITS[this.circuitIdx].name;
+    document.getElementById('hudWeather').textContent= (this.weather === 'DRY' ? '☀' : this.weather === 'WET' ? '🌧' : '⛈') + ' ' + this.weather;
+
+    /* Turbo bar */
+    const pct = p.turbo / TURBO_MAX;
+    document.getElementById('turboFill').style.width = (pct * 100) + '%';
+    const turboStatus = document.getElementById('turboStatus');
+    if (p.turboOn) {
+      turboStatus.textContent = 'ACTIVE';
+      turboStatus.style.color = '#FF6B35';
+    } else if (pct >= 0.15) {
+      turboStatus.textContent = 'READY';
+      turboStatus.style.color = '#E10600';
+    } else {
+      turboStatus.textContent = 'CHARGING';
+      turboStatus.style.color = '#aaa';
+    }
+
+    /* Lives */
+    const livesEl = document.getElementById('hudLives');
+    livesEl.innerHTML = '';
+    for (let i = 0; i < NUM_LIVES; i++) {
+      const heart = document.createElement('span');
+      heart.className = 'life-heart';
+      heart.textContent = i < p.lives ? '❤' : '🖤';
+      livesEl.appendChild(heart);
+    }
+  }
+
+  _updateActivePowerup(type) {
+    const el = document.getElementById('activePowerup');
+    if (!el) return;
+    const labels = { turbo:'⚡ TURBO', shield:'🛡 SHIELD', multiplier:'×2 MULTI' };
+    const colors = { turbo:'#FF6B35', shield:'#3B82F6', multiplier:'#10B981' };
+    el.textContent  = labels[type] || '—';
+    el.style.color  = colors[type] || '#333';
+    el.style.borderColor = colors[type] || '#ddd';
+    setTimeout(() => {
+      if (el) { el.textContent = '—'; el.style.color = ''; el.style.borderColor = ''; }
+    }, 8000);
+  }
+
+  _flashCircuit() {
+    const el   = document.getElementById('circuitFlash');
+    const name = document.getElementById('cfName');
+    if (!el || !name) return;
+    name.textContent = CIRCUITS[this.circuitIdx].name;
+    el.classList.remove('hidden');
+    el.style.animation = 'none';
+    void el.offsetWidth; // reflow
+    el.style.animation = '';
+    setTimeout(() => el.classList.add('hidden'), 2600);
+    document.getElementById('hudCircuit').textContent = CIRCUITS[this.circuitIdx].name;
+  }
+
+  _renderHighScores() {
+    const list = document.getElementById('scoresList');
+    if (!list) return;
+    if (!this.highScores.length) {
+      list.innerHTML = '<div class="no-scores">No races yet. Hit the track!</div>';
+      return;
+    }
+    list.innerHTML = this.highScores.map((s, i) =>
+      `<div class="score-entry">
+        <span class="score-rank">#${i+1}</span>
+        <span class="score-pts">${s.score} PTS</span>
+        <span class="score-date">${s.date}</span>
+      </div>`
+    ).join('');
+    document.getElementById('menuBest').textContent = this.bestScore;
+  }
 }
 
-/* 5. Fetch session results for the modal */
-function loadSession(round, session, el) {
-  var key = SEASON+'-'+round+'-'+session;
-  if (_cache[key]) { el.innerHTML='<div class="tab-pane active">'+_cache[key]+'</div>'; return; }
-  el.innerHTML='<div class="tab-pane active"><div class="m-loading"><span class="spinner"></span>Loading '+session+' data\u2026</div></div>';
-  var paths = {
-    race:'/'+SEASON+'/'+round+'/results/',
-    quali:'/'+SEASON+'/'+round+'/qualifying/',
-    sprint:'/'+SEASON+'/'+round+'/sprint/',
-    fp1:'/'+SEASON+'/'+round+'/practice/1/',
-    fp2:'/'+SEASON+'/'+round+'/practice/2/',
-    fp3:'/'+SEASON+'/'+round+'/practice/3/'
-  };
-  apiFetch(paths[session], function(data) {
-    if (!data || !data.MRData || !data.MRData.RaceTable) {
-      var h='<div class="m-error">\u26a0 Could not reach the API. Please check your internet connection.</div>';
-      el.innerHTML='<div class="tab-pane active">'+h+'</div>'; return;
-    }
-    var races = data.MRData.RaceTable.Races;
-    if (!races || !races.length) {
-      var h='<div class="m-empty">\uD83D\uDCEB Session data not yet available for this event.</div>';
-      _cache[key]=h; el.innerHTML='<div class="tab-pane active">'+h+'</div>'; return;
-    }
-    var rObj    = races[0];
-    var results = rObj.Results||rObj.QualifyingResults||rObj.SprintResults||rObj.PracticeResults||[];
-    if (!results.length) {
-      var h='<div class="m-empty">\uD83D\uDCEB No results data for this session yet.</div>';
-      _cache[key]=h; el.innerHTML='<div class="tab-pane active">'+h+'</div>'; return;
-    }
-    var h='';
-    if (session==='race'||session==='sprint') { h+=buildPodium(results,session); h+=buildRaceTable(results); }
-    else if (session==='quali')               { h+=buildPodium(results,'quali'); h+=buildQualiTable(results); }
-    else                                       { h+=buildPracticeTable(results); }
-    _cache[key]=h; el.innerHTML='<div class="tab-pane active">'+h+'</div>';
-  });
-}
-
-/* Refresh standings every 5 minutes */
-function scheduleRefresh() {
-  setTimeout(function() { apiLoadStandings(); scheduleRefresh(); }, 5*60*1000);
-}
-
-
-/* ═══════════════════════════════════════════════════════════
-   BOOT — runs on page load
-   Step 1: Render everything from hardcoded data (instant)
-   Step 2: Fire API calls to upgrade content silently
-═══════════════════════════════════════════════════════════ */
-(function boot() {
-
-  /* ── STEP 1: Instant render from hardcoded data ── */
-
-  startCountdown();
-
-  buildFilterDropdowns();
-  document.getElementById('drv-search').addEventListener('input',   applyFilter);
-  document.getElementById('team-filter').addEventListener('change', applyFilter);
-  document.getElementById('nat-filter').addEventListener('change',  applyFilter);
-  renderDriverCards(DRIVERS);
-
-  renderTeams(TEAMS, null, null);
-  renderSchedule(RACES);
-  renderDriverStandings(DRIVER_STANDINGS);
-  renderConstructorStandings(CONSTRUCTOR_STANDINGS);
-
-  document.getElementById('hs-drivers').textContent = DRIVERS.length;
-  document.getElementById('hs-teams').textContent   = TEAMS.length;
-  document.getElementById('hs-races').textContent   = RACES.length;
-
-  /* ── STEP 2: Background API upgrades (500ms delay) ── */
-  setTimeout(function() {
-    apiLoadDrivers();
-    apiLoadTeams();
-    apiLoadSchedule();
-    apiLoadStandings();
-    scheduleRefresh();
-  }, 500);
-
-})();
+/* ════════════════════════════════════════════════════════════
+   BOOT
+════════════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  window.game = new Game();
+});
