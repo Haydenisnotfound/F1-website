@@ -6,7 +6,7 @@
 'use strict';
 
 /* Clear old cached data if the site has been updated */
-const CACHE_VERSION = '4';
+const CACHE_VERSION = '5';
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) {
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k =>
     localStorage.removeItem(k));
@@ -256,7 +256,7 @@ function initTabs() {
 }
 
 /* ── Next race card ──────────────────────────────────────── */
-function renderNextRace(race) {
+function renderNextRace(race, seasonOver = false) {
   const card = document.getElementById('nextRaceCard');
   const dt   = raceDateTime(race);
   const flag = getFlag(race.Circuit.Location.country);
@@ -295,7 +295,7 @@ function renderNextRace(race) {
         </div>
       </div>
       <div class="nrc-countdown">
-        <span class="nrc-countdown-label">Race starts in</span>
+        <span class="nrc-countdown-label">${seasonOver ? 'Season Complete 🏁' : 'Race starts in'}</span>
         <div class="countdown-boxes" id="mainCountdown">
           ${countdownBoxHTML('00','DAYS')}
           <span class="countdown-sep">:</span>
@@ -309,7 +309,7 @@ function renderNextRace(race) {
     </div>
   `;
 
-  startMainCountdown(dt);
+  if (!seasonOver) startMainCountdown(dt);
 }
 
 function countdownBoxHTML(val, unit) {
@@ -602,18 +602,28 @@ async function loadAll() {
 
 async function loadSchedule() {
   try {
+    // Fetch the current season schedule from the API
     const data = await apiFetch(`${API_BASE}/current.json`, 'f1-schedule');
     allRaces = data?.MRData?.RaceTable?.Races || [];
 
     const now  = Date.now();
+    // Find the next race that hasn't happened yet
     const next = allRaces.find(r => raceDateTime(r) > now);
+    // Find the most recent past race
+    const last = [...allRaces].reverse().find(r => raceDateTime(r) <= now);
 
-    if (next) renderNextRace(next);
-    else {
+    if (next) {
+      // There's a future race — show the countdown to it
+      renderNextRace(next);
+    } else if (last) {
+      // All races are done — show the last race with a "season over" message
+      renderNextRace(last, true);
+    } else {
       document.getElementById('nextRaceCard').innerHTML =
-        errorHTML('The season is over. See you next year! 🏁');
+        errorHTML('No race data available. 🏁');
     }
 
+    // Show upcoming races (future only)
     renderRaceCards(allRaces);
   } catch (err) {
     console.error('Schedule fetch failed:', err);
