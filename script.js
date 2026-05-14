@@ -37,12 +37,12 @@ const CIRCUIT_IMAGES = {
   'Baku City Circuit':               'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHRKAfPTnO-fOCR8Ij5mdEThKxGIYhr1LDxA&s',
   'Marina Bay Street Circuit':       'https://images.unsplash.com/photo-1516422641841-cd9803ab02c6?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2luZ2Fwb3JlJTJDJTIwc2luZ2Fwb3JlfGVufDB8fDB8fHww',
   'Circuit of the Americas':         'https://images.unsplash.com/photo-1516546453174-5e1098a4b4af?w=600&q=70',
-  'Autodromo Hermanos Rodriguez':    'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=600&q=70',
-  'Autodromo Hermanos Rodríguez':    'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=600&q=70',
+  'Autodromo Hermanos Rodriguez':    'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Mexico/2181405883.webp',
+  'Autodromo Hermanos Rodríguez':    'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Mexico/2181405883.webp',
   'Autodromo José Carlos Pace':      'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&q=70',
   'Las Vegas Strip Street Circuit':  'https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=600&q=70',
-  'Losail International Circuit':    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=70',
-  'Yas Marina Circuit':              'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=70',
+  'Losail International Circuit':    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFMWn0xK5_dsh9S19HauSHkvwlnH-_Nr3nMA&s',
+  'Yas Marina Circuit':              'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/fom-website/campaign/1019441640-SUT-20221120-GP22EAA_124524_GHZ8825.webp',
   'Madring':                         'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=70',
 };
 const DEFAULT_IMG = 'https://images.unsplash.com/photo-1541773367336-d3f9f1d312b4?w=600&q=70';
