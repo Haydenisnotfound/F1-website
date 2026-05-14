@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '7';
+const CACHE_VERSION = '8';
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) {
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k =>
     localStorage.removeItem(k));
@@ -106,7 +106,7 @@ async function apiFetch(url, cacheKey) {
       // Give the API 15 seconds to respond before giving up on this attempt
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(url, { signal: controller.signal });
+      const res = await fetch(url, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
       clearTimeout(timer);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
