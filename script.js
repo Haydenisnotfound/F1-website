@@ -19,8 +19,8 @@ const CACHE_TTL = 5 * 60 * 1000; // how long to keep saved data (5 minutes)
    Maps each circuit name to a nice Unsplash photo */
 const CIRCUIT_IMAGES = {
   'Albert Park Grand Prix Circuit':  'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/fom-website/campaign/support-promoter/australia/FAQ%2025%20SD_2024_Australia_Helicopter_200%20169.webp',
-  'Bahrain International Circuit':   'https://images.unsplash.com/photo-1520942702018-0862200e6873?w=600&q=70',
-  'Jeddah Corniche Circuit':         'https://images.unsplash.com/photo-1565073624497-7144969e5d3d?w=600&q=70',
+  'Bahrain International Circuit':   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOmdM1tP08Qirxndg2rI-xGSfSZor0tZafCQ&s',
+  'Jeddah Corniche Circuit':         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN04upqm5siYabk9TbFXNT5bR5aeEV74JbeA&s',
   'Suzuka Circuit':                  'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Japan/2147405986.webp',
   'Shanghai International Circuit':  'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=600&q=70',
   'Miami International Autodrome':   'https://images.unsplash.com/photo-1589083130544-0d6a2926e519?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWlhbWl8ZW58MHx8MHx8fDA%3D',
@@ -32,9 +32,9 @@ const CIRCUIT_IMAGES = {
   'Silverstone Circuit':             'https://www.motorsinside.com/en/wp-content/uploads/sites/2/2023/07/1500_edito_09DTWWmjefquaGsMqE99kgYf7urLPR_wOXoyP_zlyTOCw3vhPphBfffRRKR2YjxiTLFf_w8W2hFhqPrahuXkM5mzcMIzlteKzeTp.webp',
   'Hungaroring':                     'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=70',
   'Circuit de Spa-Francorchamps':    'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&q=70',
-  'Circuit Park Zandvoort':          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70',
+  'Circuit Park Zandvoort':          'https://www.circuitzandvoort.nl/images/backgrounds/background-the-circuit-mobile.jpg',
   'Autodromo Nazionale di Monza':    'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&q=70',
-  'Baku City Circuit':               'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?w=600&q=70',
+  'Baku City Circuit':               'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHRKAfPTnO-fOCR8Ij5mdEThKxGIYhr1LDxA&s',
   'Marina Bay Street Circuit':       'https://images.unsplash.com/photo-1516422641841-cd9803ab02c6?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2luZ2Fwb3JlJTJDJTIwc2luZ2Fwb3JlfGVufDB8fDB8fHww',
   'Circuit of the Americas':         'https://images.unsplash.com/photo-1516546453174-5e1098a4b4af?w=600&q=70',
   'Autodromo Hermanos Rodriguez':    'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=600&q=70',
