@@ -18,7 +18,7 @@ const CACHE_TTL = 5 * 60 * 1000; // how long to keep saved data (5 minutes)
 /* ── Circuit background images ───────────────────────────────
    Maps each circuit name to a nice Unsplash photo */
 const CIRCUIT_IMAGES = {
-  'Albert Park Grand Prix Circuit':  'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&q=70',
+  'Albert Park Grand Prix Circuit':  'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/fom-website/campaign/support-promoter/australia/FAQ%2025%20SD_2024_Australia_Helicopter_200%20169.webp',
   'Bahrain International Circuit':   'https://images.unsplash.com/photo-1520942702018-0862200e6873?w=600&q=70',
   'Jeddah Corniche Circuit':         'https://images.unsplash.com/photo-1565073624497-7144969e5d3d?w=600&q=70',
   'Suzuka Circuit':                  'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=70',
