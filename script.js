@@ -6,7 +6,7 @@
 'use strict';
 
 /* Clear old cached data if the site has been updated */
-const CACHE_VERSION = '3';
+const CACHE_VERSION = '4';
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) {
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k =>
     localStorage.removeItem(k));
@@ -95,31 +95,26 @@ async function apiFetch(url, cacheKey) {
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  // Set a 10-second timeout — if the API takes longer, we give up gracefully
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer); // cancel the timeout since we got a response
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    cacheSet(cacheKey, json); // save to cache for next time
-    return json;
-  } catch (err) {
-    clearTimeout(timer);
-    // If it timed out or failed, try one more time after 2 seconds
-    if (err.name === 'AbortError' || err.message.includes('fetch')) {
-      await new Promise(r => setTimeout(r, 2000)); // wait 2 seconds
-      const res2 = await fetch(url); // try again without timeout
-      if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
-      const json2 = await res2.json();
-      cacheSet(cacheKey, json2);
-      return json2;
+  // Try up to 3 times in case the API is slow
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      // Give the API 15 seconds to respond before giving up
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      cacheSet(cacheKey, json); // save so we don't need to fetch again soon
+      return json;
+    } catch (err) {
+      console.warn(`Attempt ${attempt} failed:`, err.message);
+      if (attempt === 3) throw err; // give up after 3 tries
+      await new Promise(r => setTimeout(r, attempt * 2000)); // wait then retry
     }
-    throw err;
   }
 }
+
 
 /* ── Date helpers ────────────────────────────────────────── */
 function raceDateTime(race) {
