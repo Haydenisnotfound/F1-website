@@ -33,7 +33,7 @@ const CIRCUIT_IMAGES = {
   'Hungaroring':                     'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=70',
   'Circuit de Spa-Francorchamps':    'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&q=70',
   'Circuit Park Zandvoort':          'https://www.circuitzandvoort.nl/images/backgrounds/background-the-circuit-mobile.jpg',
-  'Autodromo Nazionale di Monza':    'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&q=70',
+  'Autodromo Nazionale di Monza':    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAaxKIjLHROlF57ULmfCEcfnT-VLHfzJVHbw&s',
   'Baku City Circuit':               'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHRKAfPTnO-fOCR8Ij5mdEThKxGIYhr1LDxA&s',
   'Marina Bay Street Circuit':       'https://images.unsplash.com/photo-1516422641841-cd9803ab02c6?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2luZ2Fwb3JlJTJDJTIwc2luZ2Fwb3JlfGVufDB8fDB8fHww',
   'Circuit of the Americas':         'https://images.unsplash.com/photo-1516546453174-5e1098a4b4af?w=600&q=70',
