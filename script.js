@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '6';
+const CACHE_VERSION = '7';
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) {
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k =>
     localStorage.removeItem(k));
@@ -708,7 +708,11 @@ async function loadStandings() {
 
 // Loads everything at once when the page opens
 async function loadAll() {
-  await Promise.allSettled([loadSchedule(), loadResults(), loadStandings()]);
+  await loadSchedule();
+  await new Promise(r => setTimeout(r, 600));
+  await loadResults();
+  await new Promise(r => setTimeout(r, 600));
+  await loadStandings();
 }
 
 /* ── Start everything when the page is ready ─────────────────*/
