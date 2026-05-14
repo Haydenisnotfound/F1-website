@@ -21,7 +21,7 @@ const CIRCUIT_IMAGES = {
   'Albert Park Grand Prix Circuit':  'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/fom-website/campaign/support-promoter/australia/FAQ%2025%20SD_2024_Australia_Helicopter_200%20169.webp',
   'Bahrain International Circuit':   'https://images.unsplash.com/photo-1520942702018-0862200e6873?w=600&q=70',
   'Jeddah Corniche Circuit':         'https://images.unsplash.com/photo-1565073624497-7144969e5d3d?w=600&q=70',
-  'Suzuka Circuit':                  'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=70',
+  'Suzuka Circuit':                  'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Japan/2147405986.webp',
   'Shanghai International Circuit':  'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=600&q=70',
   'Miami International Autodrome':   'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?w=600&q=70',
   'Autodromo Enzo e Dino Ferrari':   'https://images.unsplash.com/photo-1551801841-ecad875a5142?w=600&q=70',
