@@ -640,3 +640,216 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   loadAll();
 });
+
+/* ============================================================
+   PAST RACES & MODAL — added code
+   Everything below handles the "Past Races" grid and the
+   popup that appears when you click on a past race card.
+   ============================================================ */
+
+/* --- Render Past Race Cards --------------------------------
+   This function takes all the races from the API and filters
+   down to only the ones that have already happened.
+   It then builds a card for each one and puts them on the page. */
+function renderPastRaceCards(races) {
+  // Get the grid container on the page where cards will go
+  const grid = document.getElementById('pastRacesGrid');
+
+  const now = Date.now(); // the current time in milliseconds
+
+  // Keep only races whose date is in the past
+  const past = races.filter(r => raceDateTime(r) <= now);
+
+  // If there are no past races yet (e.g. very start of season), show a message
+  if (!past.length) {
+    grid.innerHTML = '<p style="color:var(--gray);padding:32px;text-align:center">No completed races yet this season.</p>';
+    return;
+  }
+
+  // Show the most recent race first by reversing the list
+  const reversed = [...past].reverse();
+
+  // Build one HTML card string for each past race
+  grid.innerHTML = reversed.map(race => {
+    const dt   = raceDateTime(race);          // the race date as a Date object
+    const flag = getFlag(race.Circuit.Location.country); // country emoji flag
+    const img  = getImg(race.Circuit.circuitName);       // circuit background image
+
+    // Return the HTML for one card
+    // data-round stores the round number so we know which race was clicked
+    return `
+      <div class="race-card past-card" data-round="${race.round}" style="cursor:pointer">
+        <div class="rc-img-wrap">
+          <img class="rc-img" src="${img}" alt="${race.raceName}" loading="lazy"/>
+          <div class="rc-img-overlay"></div>
+          <span class="rc-flag-big">${flag}</span>
+          <span class="rc-round-badge">R${race.round}</span>
+          <span class="rc-done-badge">✓ Completed</span>
+        </div>
+        <div class="rc-body">
+          <div class="rc-name">${race.raceName.replace(' Grand Prix', '')} GP</div>
+          <div class="rc-circuit">📍 ${race.Circuit.circuitName}</div>
+          <div class="rc-meta">
+            <span class="rc-date">${formatDate(dt)}</span>
+          </div>
+          <div class="rc-click-hint">Tap for results →</div>
+        </div>
+      </div>`;
+  }).join(''); // joins all card strings into one big HTML string
+
+  // After building the cards, attach a click listener to each one
+  // So when you tap a card, it opens the popup with that race's results
+  grid.querySelectorAll('.past-card').forEach(card => {
+    card.addEventListener('click', () => {
+      // Read which round number was stored on this card
+      const round = card.dataset.round;
+      // Open the modal and fetch results for that round
+      openModal(round);
+    });
+  });
+}
+
+/* --- Open Modal --------------------------------------------
+   Called when you click a past race card.
+   Shows the popup and fetches the results for that round. */
+async function openModal(round) {
+  const overlay = document.getElementById('modalOverlay'); // the dark background
+  const content = document.getElementById('modalContent'); // where results go
+
+  // Show a loading spinner inside the popup while we fetch data
+  content.innerHTML = `
+    <div class="grid-loading">
+      <div class="spinner"></div>
+      <p>Loading results…</p>
+    </div>`;
+
+  // Make the overlay visible by adding the "open" CSS class
+  overlay.classList.add('open');
+
+  // Stop the page from scrolling while the popup is open
+  document.body.style.overflow = 'hidden';
+
+  try {
+    // Ask the API for the results of this specific round number
+    // We don't cache these so results are always fresh
+    const res  = await fetch(`${API_BASE}/current/${round}/results.json`);
+    const data = await res.json(); // convert the response to a JS object
+
+    // Dig into the nested response to get the race object
+    const race    = data?.MRData?.RaceTable?.Races?.[0];
+    const results = race?.Results || []; // the array of driver finishes
+
+    // If something went wrong or no data came back, show an error
+    if (!race || !results.length) {
+      content.innerHTML = '<p style="padding:32px;text-align:center;color:var(--gray)">No results available for this race.</p>';
+      return;
+    }
+
+    // Find which driver set the fastest lap (the API marks them with rank "1")
+    const flDriver = results.find(r => r.FastestLap?.rank === '1');
+
+    // Build the podium section — top 3 finishers with medal emojis
+    const podiumHTML = results.slice(0, 3).map((r, i) => `
+      <div class="modal-podium-item">
+        <div class="modal-podium-medal">${['🥇','🥈','🥉'][i]}</div>
+        <div class="modal-podium-name">${r.Driver.givenName} ${r.Driver.familyName}</div>
+        <div class="modal-podium-team" style="color:${teamColor(r.Constructor.name)}">${r.Constructor.name}</div>
+      </div>`).join('');
+
+    // Build the full top-10 results table rows
+    const rowsHTML = results.slice(0, 10).map(r => {
+      const pos    = parseInt(r.position, 10);
+      // Give positions 1, 2, 3 a special colour class
+      const posCls = pos === 1 ? 'p1' : pos === 2 ? 'p2' : pos === 3 ? 'p3' : '';
+      const hasFl  = r.FastestLap?.rank === '1'; // did this driver set fastest lap?
+
+      return `
+        <tr>
+          <td><span class="result-pos ${posCls}">${r.position}</span></td>
+          <td>
+            <div class="result-driver-name">
+              ${r.Driver.givenName} ${r.Driver.familyName}
+              ${hasFl ? '<span class="result-fl-badge">FL</span>' : ''}
+            </div>
+            <div class="result-team" style="color:${teamColor(r.Constructor.name)}">${r.Constructor.name}</div>
+          </td>
+          <td style="font-weight:700">${r.points}</td>
+        </tr>`;
+    }).join('');
+
+    // Put it all together and drop it into the modal content area
+    content.innerHTML = `
+      <div class="modal-race-title">${race.raceName}</div>
+      <div class="modal-race-sub">
+        📅 ${formatDate(raceDateTime(race))} &nbsp;·&nbsp; 📍 ${race.Circuit.circuitName}
+      </div>
+
+      <div class="modal-podium">${podiumHTML}</div>
+
+      ${flDriver ? `
+        <div class="modal-fl">
+          ⚡ Fastest Lap: ${flDriver.Driver.givenName} ${flDriver.Driver.familyName}
+          — ${flDriver.FastestLap.Time?.time || ''}
+        </div>` : ''}
+
+      <table class="modal-table">
+        <thead>
+          <tr>
+            <th>Pos</th>
+            <th>Driver</th>
+            <th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHTML}</tbody>
+      </table>`;
+
+  } catch (err) {
+    // If the fetch failed for any reason, show a friendly error
+    content.innerHTML = '<p style="padding:32px;text-align:center;color:var(--gray)">Could not load results. Please try again.</p>';
+    console.error('Modal fetch error:', err);
+  }
+}
+
+/* --- Close Modal -------------------------------------------
+   Hides the popup and re-enables page scrolling. */
+function closeModal() {
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.remove('open'); // removes the "open" class → popup fades out
+  document.body.style.overflow = '';  // lets the page scroll again
+}
+
+/* --- Hook up the close buttons ----------------------------
+   Runs once when the page loads.
+   Attaches click listeners to the X button and the dark overlay. */
+function initModal() {
+  // Clicking the X button closes the modal
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+
+  // Clicking the dark background (outside the white box) also closes it
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    // e.target is whatever was actually clicked
+    // We only close if you clicked the overlay itself, not the white box inside it
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  });
+
+  // Pressing the Escape key on a keyboard also closes the modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+}
+
+/* --- Patch loadSchedule to also render past races ---------
+   The original loadSchedule() already fetches allRaces.
+   We override it here to also call renderPastRaceCards()
+   after the schedule loads, and to call initModal() once. */
+const _originalLoadSchedule = loadSchedule; // save the original function
+
+// Replace loadSchedule with a new version that does everything the old one did
+// plus also renders the past races grid
+loadSchedule = async function() {
+  await _originalLoadSchedule(); // run the original function first
+  renderPastRaceCards(allRaces); // then also build the past races section
+};
+
+// Set up the modal close buttons as soon as the page is ready
+document.addEventListener('DOMContentLoaded', initModal);
