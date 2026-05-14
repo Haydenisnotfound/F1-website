@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  <!-- ========== NAVBAR ========== -->
+  <!-- NAVBAR: the sticky bar at the top with all the links -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
       <a href="#" class="nav-logo">
@@ -23,12 +23,9 @@
         <li><a href="#upcoming" class="nav-link">Races</a></li>
         <li><a href="#results" class="nav-link">Results</a></li>
         <li><a href="#standings" class="nav-link">Standings</a></li>
+        <li><a href="#past" class="nav-link">Past Races</a></li>
       </ul>
       <div class="nav-actions">
-        <div class="search-wrap">
-          <input type="text" id="searchInput" placeholder="Search country…" class="search-input" />
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
         <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -40,14 +37,14 @@
     </div>
   </nav>
 
-  <!-- ========== HERO ========== -->
+  <!-- HERO: the big full-screen image section at the top -->
   <section class="hero" id="hero">
     <div class="hero-bg">
       <img src="https://images.unsplash.com/photo-1541773367336-d3f9f1d312b4?w=1800&auto=format&fit=crop&q=80" alt="F1 Car" class="hero-img" />
       <div class="hero-overlay"></div>
     </div>
     <div class="hero-content">
-      <div class="hero-badge">2026 Season</div>
+      <div class="hero-badge">2025 Season</div>
       <h1 class="hero-title">Formula 1<br/><span class="title-accent">Countdown</span></h1>
       <p class="hero-subtitle">Live countdown to the next Grand Prix — plus results, standings, and the full race calendar.</p>
       <div class="hero-cta">
@@ -61,14 +58,13 @@
     </div>
   </section>
 
-  <!-- ========== LIVE COUNTDOWN ========== -->
+  <!-- COUNTDOWN: shows the next race and a live ticking timer -->
   <section class="section" id="countdown">
     <div class="container">
       <div class="section-header">
         <span class="section-tag">Live</span>
         <h2 class="section-title">Next Grand Prix</h2>
       </div>
-
       <div class="next-race-card" id="nextRaceCard">
         <div class="nrc-loading">
           <div class="spinner"></div>
@@ -78,7 +74,7 @@
     </div>
   </section>
 
-  <!-- ========== UPCOMING RACES ========== -->
+  <!-- UPCOMING RACES: cards for every race still to come this season -->
   <section class="section section-alt" id="upcoming">
     <div class="container">
       <div class="section-header">
@@ -101,7 +97,7 @@
     </div>
   </section>
 
-  <!-- ========== LATEST RESULTS ========== -->
+  <!-- LATEST RESULTS: podium + top 10 from the most recent race -->
   <section class="section" id="results">
     <div class="container">
       <div class="section-header">
@@ -117,7 +113,7 @@
     </div>
   </section>
 
-  <!-- ========== STANDINGS ========== -->
+  <!-- STANDINGS: driver and constructor championship tables -->
   <section class="section section-alt" id="standings">
     <div class="container">
       <div class="section-header">
@@ -137,7 +133,42 @@
     </div>
   </section>
 
-  <!-- ========== FOOTER ========== -->
+  <!-- PAST RACES: cards for every race that has already happened -->
+  <!-- JavaScript fills this grid automatically from the API -->
+  <section class="section" id="past">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">History</span>
+        <h2 class="section-title">Past Races</h2>
+      </div>
+      <!-- This empty grid gets filled in by JavaScript -->
+      <div class="races-grid" id="pastRacesGrid">
+        <div class="grid-loading">
+          <div class="spinner"></div>
+          <p>Loading past races…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL POPUP: appears when you click a past race card -->
+  <!-- Normally invisible — JavaScript makes it visible on click -->
+  <div class="modal-overlay" id="modalOverlay">
+    <!-- The white card in the middle of the screen -->
+    <div class="modal-box">
+      <!-- X button top-right — clicking it closes the popup -->
+      <button class="modal-close" id="modalClose">&times;</button>
+      <!-- JavaScript drops the race result table in here -->
+      <div id="modalContent">
+        <div class="grid-loading">
+          <div class="spinner"></div>
+          <p>Loading results…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
       <div class="footer-inner">
@@ -149,7 +180,7 @@
     </div>
   </footer>
 
-  <!-- Back to top -->
+  <!-- BACK TO TOP button (bottom-right corner) -->
   <button class="back-to-top" id="backToTop" aria-label="Back to top">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
