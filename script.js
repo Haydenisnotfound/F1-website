@@ -35,7 +35,7 @@ const CIRCUIT_IMAGES = {
   'Circuit Park Zandvoort':          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=70',
   'Autodromo Nazionale di Monza':    'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&q=70',
   'Baku City Circuit':               'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?w=600&q=70',
-  'Marina Bay Street Circuit':       'https://images.unsplash.com/photo-1559564058-6f0b6ddf5e57?w=600&q=70',
+  'Marina Bay Street Circuit':       'https://images.unsplash.com/photo-1516422641841-cd9803ab02c6?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2luZ2Fwb3JlJTJDJTIwc2luZ2Fwb3JlfGVufDB8fDB8fHww',
   'Circuit of the Americas':         'https://images.unsplash.com/photo-1516546453174-5e1098a4b4af?w=600&q=70',
   'Autodromo Hermanos Rodriguez':    'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=600&q=70',
   'Autodromo Hermanos Rodríguez':    'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=600&q=70',
