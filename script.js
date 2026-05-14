@@ -5,6 +5,14 @@
 
 'use strict';
 
+/* Clear old cached data if the site has been updated */
+const CACHE_VERSION = '3';
+if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) {
+  ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k =>
+    localStorage.removeItem(k));
+  localStorage.setItem('f1hub-version', CACHE_VERSION);
+}
+
 /* ── Constants ───────────────────────────────────────────── */
 const API_BASE   = 'https://api.jolpi.ca/ergast/f1';
 const CACHE_TTL  = 5 * 60 * 1000; // 5 minutes
@@ -83,13 +91,34 @@ function cacheGet(key) {
 
 /* ── Fetch with cache ────────────────────────────────────── */
 async function apiFetch(url, cacheKey) {
+  // First check if we already have fresh data saved — if so, use it immediately
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  cacheSet(cacheKey, json);
-  return json;
+
+  // Set a 10-second timeout — if the API takes longer, we give up gracefully
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer); // cancel the timeout since we got a response
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    cacheSet(cacheKey, json); // save to cache for next time
+    return json;
+  } catch (err) {
+    clearTimeout(timer);
+    // If it timed out or failed, try one more time after 2 seconds
+    if (err.name === 'AbortError' || err.message.includes('fetch')) {
+      await new Promise(r => setTimeout(r, 2000)); // wait 2 seconds
+      const res2 = await fetch(url); // try again without timeout
+      if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+      const json2 = await res2.json();
+      cacheSet(cacheKey, json2);
+      return json2;
+    }
+    throw err;
+  }
 }
 
 /* ── Date helpers ────────────────────────────────────────── */
