@@ -29,7 +29,7 @@ const CIRCUIT_IMAGES = {
   'Circuit de Barcelona-Catalunya':  'https://www.lrs-formula.com/c/57-pdt_1920/barcelona-catalunya-circuit.jpg',
   'Circuit Gilles Villeneuve':       'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2025/F1_Grand_Prix_of_Canada/2220284738.webp',
   'Red Bull Ring':                   'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_2048/q_auto/v1740000001/fom-website/2025/Austria/NEED%20TO%20KNOW%20V1%20(2).webp',
-  'Silverstone Circuit':             'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQKj4zhAg0LtsVx-Nc3G_qO3ImbCbDBmlF6Xg&s',
+  'Silverstone Circuit':             'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/content/dam/fom-website/sutton/2021/GreatBritain/Sunday/1329376119.webp',
   'Hungaroring':                     'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/fom-website/2025/Miscellaneous/GettyImages-2162887615.webp',
   'Circuit de Spa-Francorchamps':    'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&q=70',
   'Circuit Park Zandvoort':          'https://www.circuitzandvoort.nl/images/backgrounds/background-the-circuit-mobile.jpg',
@@ -39,11 +39,11 @@ const CIRCUIT_IMAGES = {
   'Circuit of the Americas':         'https://images.unsplash.com/photo-1716408703120-16c0cad5195f?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDE5fHx8ZW58MHx8fHx8',
   'Autódromo Hermanos Rodríguez':    'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Mexico/2181405883.webp',
   'Autódromo Hermanos Rodríguez':    'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Mexico/2181405883.webp',
-  'Autódromo José Carlos Pace':      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw0EPmyASzDbdCFljZnJTym9WCtFMlzPAGzA&s',
+  'Autódromo José Carlos Pace':      'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/fom-website/2023/Brazil/GettyImages-1441228783.webp',
   'Las Vegas Strip Street Circuit':  'https://images.unsplash.com/photo-1664020361093-79cdc912cfb2?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGxhcyUyMHZlZ2FzfGVufDB8fDB8fHww',
   'Losail International Circuit':    'https://images.unsplash.com/photo-1700901742651-6b353164caf3?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8ZG9oYXxlbnwwfHwwfHx8MA%3D%3D',
   'Yas Marina Circuit':              'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/fom-website/campaign/1019441640-SUT-20221120-GP22EAA_124524_GHZ8825.webp',
-  'Madring':                         'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=70',
+  'Madring':                         'https://images.unsplash.com/photo-1543783207-ec64e4d95325?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bWFkcmlkfGVufDB8fDB8fHww',
 };
 const DEFAULT_IMG = 'https://images.unsplash.com/photo-1541773367336-d3f9f1d312b4?w=600&q=70';
 
