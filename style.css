@@ -26,6 +26,8 @@
   --font-display: 'Barlow Condensed', sans-serif;
   --font-body: 'Poppins', sans-serif;
   --nav-height: 64px;
+   --countdown-bg: #1a1a1a;
+   --countdown-num-color: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -485,7 +487,7 @@ input { font-family: var(--font-body); }
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--dark);
+  background: var(--countdown-bg);
   border-radius: 10px;
   padding: 14px 16px 10px;
   min-width: 70px;
@@ -503,7 +505,7 @@ input { font-family: var(--font-body); }
   font-family: var(--font-display);
   font-size: 2.2rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--countdown-num-color);
   line-height: 1;
   letter-spacing: -1px;
   transition: transform 0.2s ease;
@@ -513,7 +515,7 @@ input { font-family: var(--font-body); }
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.45);
+  color: var(--countdown-num-color);
   margin-top: 4px;
 }
 .countdown-sep {
