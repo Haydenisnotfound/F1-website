@@ -287,7 +287,7 @@ function renderNextRace(race, seasonOver) {
       <div class="nrc-countdown">
         ${seasonOver
           ? '<span class="nrc-countdown-label" style="font-size:1.2rem">Season complete — see you in 2027! 🏁</span>'
-          : `<span class="nrc-countdown-label">Race starts in</span>
+          : `<span class="nrc-countdown-label">Lights out in</span>
              <div class="countdown-boxes" id="mainCountdown">
                ${countdownBoxHTML('00','DAYS')}
                <span class="countdown-sep">:</span>
