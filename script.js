@@ -22,7 +22,7 @@ const CIRCUIT_IMAGES = {
   'Bahrain International Circuit':   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOmdM1tP08Qirxndg2rI-xGSfSZor0tZafCQ&s',
   'Jeddah Corniche Circuit':         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN04upqm5siYabk9TbFXNT5bR5aeEV74JbeA&s',
   'Suzuka Circuit':                  'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Japan/2147405986.webp',
-  'Shanghai International Circuit':  'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=600&q=70',
+  'Shanghai International Circuit':  'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/fom-website/2025/China/GettyImages-2147970664.webp',
   'Miami International Autodrome':   'https://images.unsplash.com/photo-1589083130544-0d6a2926e519?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWlhbWl8ZW58MHx8MHx8fDA%3D',
   'Autodromo Enzo e Dino Ferrari':   'https://images.unsplash.com/photo-1551801841-ecad875a5142?w=600&q=70',
   'Circuit de Monaco':               'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/fom-website/2025/Monaco/GettyImages-2217000310.webp',
