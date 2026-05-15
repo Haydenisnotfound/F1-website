@@ -35,7 +35,7 @@ const CIRCUIT_IMAGES = {
   'Circuit Park Zandvoort':          'https://www.circuitzandvoort.nl/images/backgrounds/background-the-circuit-mobile.jpg',
   'Autodromo Nazionale di Monza':    'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Italy/2169742960.webp',
   'Baku City Circuit':               'https://www.f1-fansite.com/wp-content/uploads/2024/09/ALPINE_00002125_0416.jpg',
-  'Marina Bay Street Circuit':       'https://images.unsplash.com/photo-1516422641841-cd9803ab02c6?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2luZ2Fwb3JlJTJDJTIwc2luZ2Fwb3JlfGVufDB8fDB8fHww',
+  'Marina Bay Street Circuit':       'https://corp.formula1.com/wp-content/uploads/2022/01/JPG-RGB-72-DPI-455849740-scaled.jpg',
   'Circuit of the Americas':         'https://images.unsplash.com/photo-1716408703120-16c0cad5195f?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDE5fHx8ZW58MHx8fHx8',
   'Autódromo Hermanos Rodríguez':    'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Mexico/2181405883.webp',
   'Autódromo Hermanos Rodríguez':    'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Mexico/2181405883.webp',
