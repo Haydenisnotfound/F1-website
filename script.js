@@ -31,7 +31,7 @@ const CIRCUIT_IMAGES = {
   'Red Bull Ring':                   'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_2048/q_auto/v1740000001/fom-website/2025/Austria/NEED%20TO%20KNOW%20V1%20(2).webp',
   'Silverstone Circuit':             'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/content/dam/fom-website/sutton/2021/GreatBritain/Sunday/1329376119.webp',
   'Hungaroring':                     'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/fom-website/2025/Miscellaneous/GettyImages-2162887615.webp',
-  'Circuit de Spa-Francorchamps':    'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&q=70',
+  'Circuit de Spa-Francorchamps':    'https://media.formula1.com/image/upload/t_16by9Centre/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Belgium/2164083565.webp',
   'Circuit Park Zandvoort':          'https://www.circuitzandvoort.nl/images/backgrounds/background-the-circuit-mobile.jpg',
   'Autodromo Nazionale di Monza':    'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/trackside-images/2024/F1_Grand_Prix_of_Italy/2169742960.webp',
   'Baku City Circuit':               'https://www.f1-fansite.com/wp-content/uploads/2024/09/ALPINE_00002125_0416.jpg',
