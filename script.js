@@ -3,20 +3,20 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '8';
-if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) {
-  ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k =>
-    localStorage.removeItem(k));
-  localStorage.setItem('f1hub-version', CACHE_VERSION);
+const CACHE_VERSION = '8'; /*current version number */
+if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 8, */
+  ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
+    localStorage.removeItem(k)); /* removes all the infor */
+  localStorage.setItem('f1hub-version', CACHE_VERSION); /* saves the current version number into the local storage */
 }
 
-/* ── API base URL ────────────────────────────────────────────
-   All API calls start with this address */
-const API_BASE  = 'https://api.jolpi.ca/ergast/f1';
+/* ── API base URL ──────────────────────────────────────────── */
+   
+const API_BASE  = 'https://api.jolpi.ca/ergast/f1'; /*API Websites (calls the API) */
 const CACHE_TTL = 5 * 60 * 1000; // how long to keep saved data (5 minutes)
 
-/* ── Circuit background images ───────────────────────────────
-   Maps each circuit name to a nice Unsplash photo */
+// ── Circuit background images ───────────────────────────────
+   
 const CIRCUIT_IMAGES = {
   'Albert Park Grand Prix Circuit':  'https://media.formula1.com/image/upload/c_lfill,w_3392/q_auto/v1740000001/fom-website/campaign/support-promoter/australia/FAQ%2025%20SD_2024_Australia_Helicopter_200%20169.webp',
   'Bahrain International Circuit':   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOmdM1tP08Qirxndg2rI-xGSfSZor0tZafCQ&s',
@@ -45,10 +45,10 @@ const CIRCUIT_IMAGES = {
   'Yas Marina Circuit':              'https://media.formula1.com/image/upload/t_16by9South/c_lfill,w_3392/q_auto/v1740000001/fom-website/campaign/1019441640-SUT-20221120-GP22EAA_124524_GHZ8825.webp',
   'Madring':                         'https://images.unsplash.com/photo-1543783207-ec64e4d95325?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bWFkcmlkfGVufDB8fDB8fHww',
 };
-const DEFAULT_IMG = 'https://images.unsplash.com/photo-1541773367336-d3f9f1d312b4?w=600&q=70';
+const DEFAULT_IMG = 'https://images.unsplash.com/photo-1541773367336-d3f9f1d312b4?w=600&q=70'; //default image if track does not match with the array
 
 /* ── Country flags ───────────────────────────────────────────
-   Maps country names to emoji flags */
+   country names to emoji flags */
 const COUNTRY_FLAGS = {
   'Australia':'🇦🇺','Bahrain':'🇧🇭','Saudi Arabia':'🇸🇦','Japan':'🇯🇵',
   'China':'🇨🇳','USA':'🇺🇸','United States':'🇺🇸','Italy':'🇮🇹',
@@ -60,7 +60,7 @@ const COUNTRY_FLAGS = {
 };
 
 /* ── Team colours ────────────────────────────────────────────
-   Used to colour team names throughout the site */
+   color team names throughout the site */
 const TEAM_COLORS = {
   'Red Bull':'#3671C6','McLaren':'#FF8000','Ferrari':'#E8002D',
   'Mercedes':'#27F4D2','Aston Martin':'#358C75','Alpine':'#FF87BC',
@@ -69,13 +69,13 @@ const TEAM_COLORS = {
 };
 
 /* ── App state ───────────────────────────────────────────────
-   Variables that hold data while the page is open */
+   variables that hold data */
 let allRaces             = [];   // every race in the season
 let countdownInterval    = null; // the timer ticking every second
 let miniTimers           = {};   // mini timers on each race card
 let currentTab           = 'drivers'; // which standings tab is active
-let driverStandings      = [];
-let constructorStandings = [];
+let driverStandings      = []; //driver standings
+let constructorStandings = []; //constructor standings
 
 /* ── localStorage cache helpers ─────────────────────────────
    Saves API responses so we don't fetch the same data twice */
@@ -302,7 +302,7 @@ function renderNextRace(race, seasonOver) {
     </div>`;
 
   // Only start the ticking countdown when there's actually a future race
-  if (!seasonOver) startMainCountdown(dt);
+  if (!seasonOver) startMainCountdown(dt); //if season is not over, start the countdown
 }
 
 // Builds one countdown box (the dark square showing e.g. "12 DAYS")
@@ -664,15 +664,15 @@ async function loadSchedule() {
     const last = [...allRaces].reverse().find(r => raceDateTime(r) <= now); // most recent past race
 
     if (next) {
-      renderNextRace(next, false); // show countdown to next race
+      renderNextRace(next, false); // countdown to next race
     } else if (last) {
-      renderNextRace(last, true);  // season over — show last race
+      renderNextRace(last, true);  // when season over, show last race
     } else {
       document.getElementById('nextRaceCard').innerHTML = errorHTML('No race data available.');
     }
 
-    renderRaceCards(allRaces);     // upcoming races grid
-    renderPastRaceCards(allRaces); // past races grid
+    renderRaceCards(allRaces);     // renders upcoming races grid
+    renderPastRaceCards(allRaces); // renders past races grid
   } catch(err) {
     console.error('Schedule failed:', err);
     document.getElementById('nextRaceCard').innerHTML = errorHTML('Could not load race data. Please try refreshing.');
