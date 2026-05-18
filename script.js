@@ -600,10 +600,10 @@ async function openModal(round) { //get the round number that was clicked
       </div>`).join('');
 
     // Build each row of the top-10 results table
-    const rowsHTML = results.slice(0, 10).map(r => {
-      const pos = parseInt(r.position, 10);
-      const cls = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-      const fl  = r.FastestLap?.rank === '1';
+    const rowsHTML = results.slice(0, 10).map(r => { //variable to take the top 10 of the race and loop through them
+      const pos = parseInt(r.position, 10); //variable to convert positions into numbers
+      const cls = pos===1?'p1':pos===2?'p2':pos===3?'p3':''; //gives the top 3 a special color class
+      const fl  = r.FastestLap?.rank === '1'; //true if driver has fastest lap
       return `<tr>
         <td><span class="result-pos ${cls}">${r.position}</span></td>
         <td>
@@ -623,36 +623,36 @@ async function openModal(round) { //get the round number that was clicked
         <thead><tr><th>Pos</th><th>Driver</th><th>Pts</th></tr></thead>
         <tbody>${rowsHTML}</tbody>
       </table>`;
-  } catch(err) {
-    content.innerHTML = '<p style="padding:32px;text-align:center;color:var(--gray)">Could not load results. Please try again.</p>';
-    console.error('Modal error:', err);
+  } catch(err) { //if there is an error
+    content.innerHTML = '<p style="padding:32px;text-align:center;color:var(--gray)">Could not load results. Please try again.</p>'; //add the error message into the DOM of the popup
+    console.error('Modal error:', err); //console.log the error
   }
 }
 
 // Closes the popup and re-enables page scrolling
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
+function closeModal() { //function to close the opup
+  document.getElementById('modalOverlay').classList.remove('open'); //removes the "open" class to hide the pop up
+  document.body.style.overflow = ''; //reenables page scrolling
 }
 
 // Sets up all the ways to close the modal
-function initModal() {
-  document.getElementById('modalClose').addEventListener('click', closeModal);
-  document.getElementById('modalOverlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalOverlay')) closeModal();
+function initModal() { //function to setup all the ways to close the modal
+  document.getElementById('modalClose').addEventListener('click', closeModal); //adds an event listener to close when X is clicked
+  document.getElementById('modalOverlay').addEventListener('click', e => { //adds an event listener when anything in the overlay is clicked
+    if (e.target === document.getElementById('modalOverlay')) closeModal(); //closes if you clicked the dark background around the popup
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); }); //adds an event listener to escape key if pressed to close the popup
 }
 
 /* ── Data loading functions ──────────────────────────────────
    These fetch from the API and call the render functions above */
 
-async function loadSchedule() {
+async function loadSchedule() { //function to fetch race calandar from API
   try {
-    const data = await apiFetch(`${API_BASE}/current.json`, 'f1-schedule');
-    allRaces = data?.MRData?.RaceTable?.Races || [];
+    const data = await apiFetch(`${API_BASE}/current.json`, 'f1-schedule'); //fetch current season schedule, save under key "f1-schedule"
+    allRaces = data?.MRData?.RaceTable?.Races || []; //goes through the response to get race arrays, empty array if nothing
 
-    const now  = Date.now();
+    const now  = Date.now(); //variable for current times in milliseconds
     const next = allRaces.find(r => raceDateTime(r) > now);   // next future race
     const last = [...allRaces].reverse().find(r => raceDateTime(r) <= now); // most recent past race
 
