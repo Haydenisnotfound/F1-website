@@ -533,8 +533,8 @@ function renderPastRaceCards(races) {
     return;
   }
 
-  // Reverse so most recent is first
-  const reversed = [...past].reverse();
+
+  const reversed = [...past].reverse(); // Reverse so most recent is first
 
   grid.innerHTML = reversed.map(race => {
     const dt   = raceDateTime(race);
