@@ -85,7 +85,7 @@ function cacheSet(key, data) {
 function cacheGet(key) {
   try {
     const raw = localStorage.getItem(key);
-    if (!raw) return null;
+    if (!raw) return null; //if no data, return nothing
     const obj = JSON.parse(raw);
     // If the saved data is older than CACHE_TTL, throw it away
     if (Date.now() - obj.ts > CACHE_TTL) { localStorage.removeItem(key); return null; }
@@ -129,19 +129,19 @@ function raceDateTime(race) {
   return new Date(`${race.date}T${time}`);
 }
 
-// Formats a date like "8 Mar 2026"
-function formatDate(date) {
-  return date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+
+function formatDate(date) { //format the date day, month, year
+  return date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }); //format the date (8 Mar 2026)
 }
 
-// Formats a date like "Sun 8 Mar"
-function formatDay(date) {
-  return date.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+
+function formatDay(date) { //formats the weekday, day, month
+  return date.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }); //format the date (Sun 8 Mar)
 }
 
 // Returns days/hours/minutes/seconds until a target date
 function timeDiff(target) {
-  const diff = target - Date.now();
+  const diff = target - Date.now(); //the day and time of the race subracted by the date and time right now to get the time difference
   if (diff <= 0) return { days:0, hours:0, minutes:0, seconds:0, past:true };
   const s = Math.floor(diff / 1000);
   return {
