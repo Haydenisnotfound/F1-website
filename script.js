@@ -188,12 +188,12 @@ function initNavbar() { //setup the navbar
   const ham = document.getElementById('hamburger'); //sets the hamburger element
   const nav = document.getElementById('navLinks'); //sets the navbar/mobile nav menu
   ham.addEventListener('click', () => { //listens for a click
-    ham.classList.toggle('open'); //add or remove "open"
-    nav.classList.toggle('open'); //add or remove "open" to show the menu/hide menu
+    ham.classList.toggle('open'); //add or remove "open" on the hamburger icon to make it look like an x
+    nav.classList.toggle('open'); //add or remove "open" to show the menu/hide menu (the menu shows up after you click the hamburger)
   });
   // Close menu when a link is tapped
   nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { // add a click listener to each to every link in the menu
-    ham.classList.remove('open');
+    ham.classList.remove('open'); //turns x back to a hamburger
     nav.classList.remove('open'); //remove or hide mobile menu
   }));
 
@@ -299,7 +299,7 @@ function renderNextRace(race, seasonOver) { //gets the race data and whether the
 }
 
 // Builds one countdown box (the dark square showing e.g. "12 DAYS")
-function countdownBoxHTML(val, unit) { //creats the countdown box (val=the number, unit=the text shown below the number, ex. days, months)
+function countdownBoxHTML(val, unit) { //creates the countdown box (val=the number, unit=the text shown below the number, ex. days, months)
   return `<div class="countdown-box">
     <span class="countdown-num">${val}</span>
     <span class="countdown-unit">${unit}</span>
@@ -313,7 +313,7 @@ function startMainCountdown(target) { //countdown date
     const boxes = document.querySelectorAll('#mainCountdown .countdown-num'); //gets all 4 elements in the countdown (the days, hrs, mins, seconds)
     if (!boxes.length) { clearInterval(countdownInterval); return; } //if there are 0 boxes, clear the timer
     const t = timeDiff(target); //t = remaining days, minuts, hours, seconds
-    const vals = [pad(t.days), pad(t.hours), pad(t.minutes), pad(t.seconds)]; //arrays of values
+    const vals = [pad(t.days), pad(t.hours), pad(t.minutes), pad(t.seconds)]; //arrays of values (ex ["1","16","35","22"]
     boxes.forEach((box, i) => { //loops the boxes
       if (box.textContent !== vals[i]) { //updates if the numbers changes
         box.textContent = vals[i]; //updates the number shown
@@ -323,34 +323,34 @@ function startMainCountdown(target) { //countdown date
       }
     });
   }
-  tick();
-  countdownInterval = setInterval(tick, 1000);
+  tick(); //runs immediately so numbers show
+  countdownInterval = setInterval(tick, 1000); //repeats every one second
 }
 
 /* ── Upcoming race cards ─────────────────────────────────────
    Builds the grid of cards for races that haven't happened yet */
-function renderRaceCards(races) {
-  const grid = document.getElementById('racesGrid');
+function renderRaceCards(races) { //gets the race list
+  const grid = document.getElementById('racesGrid'); //create variable "grid" to set the racesGrid container 
   // Clear any old mini timers first
-  Object.values(miniTimers).forEach(id => clearInterval(id));
-  miniTimers = {};
+  Object.values(miniTimers).forEach(id => clearInterval(id)); //clears all the old mini timers
+  miniTimers = {}; //resets the mini timers object to be empty
 
   // Only show future races
-  const upcoming = races.filter(r => raceDateTime(r) > Date.now());
+  const upcoming = races.filter(r => raceDateTime(r) > Date.now()); //create variable upcoming to go through the race arrays and filter and keep the old races
 
-  if (!upcoming.length) {
+  if (!upcoming.length) { //if no races,
     grid.innerHTML = '<p style="color:var(--gray);padding:32px;text-align:center">No upcoming races this season.</p>';
-    return;
+    return; //show message and stop here
   }
 
-  grid.innerHTML = upcoming.map((race, idx) => {
-    const dt   = raceDateTime(race);
-    const flag = getFlag(race.Circuit.Location.country);
-    const img  = getImg(race.Circuit.circuitName);
-    const isNext = idx === 0; // the first card is the very next race
+  grid.innerHTML = upcoming.map((race, idx) => { //loops through each upcoming races and index number
+    const dt   = raceDateTime(race); //variable to get race date and time
+    const flag = getFlag(race.Circuit.Location.country); //variable to get the flag of the country
+    const img  = getImg(race.Circuit.circuitName); //variable to image of the circuit
+    const isNext = idx === 0; //if index 0, it is the next race
 
     return `
-      <div class="race-card" data-race-idx="${idx}">
+      <div class="race-card" data-race-idx="${idx}"> 
         <div class="rc-img-wrap">
           <img class="rc-img" src="${img}" alt="${race.raceName}" loading="lazy"/>
           <div class="rc-img-overlay"></div>
@@ -367,38 +367,38 @@ function renderRaceCards(races) {
           </div>
         </div>
       </div>`;
-  }).join('');
+  }).join(''); //joins all card stings into a html string
 
   // Start mini countdown timers on each card
-  upcoming.forEach(race => {
-    const el = document.getElementById(`mini-${race.round}`);
-    if (!el) return;
-    const dt = raceDateTime(race);
-    const update = () => {
-      const t = timeDiff(dt);
-      if (t.past) { el.textContent = 'Race day!'; clearInterval(miniTimers[race.round]); return; }
-      el.textContent = t.days > 0 ? `${t.days}d ${pad(t.hours)}h` : `${pad(t.hours)}h ${pad(t.minutes)}m`;
+  upcoming.forEach(race => { //loops through each upcoming race
+    const el = document.getElementById(`mini-${race.round}`); //variable to get the countdown element
+    if (!el) return; //if no element or races, skip it
+    const dt = raceDateTime(race); //variable to get race date and time
+    const update = () => { //function to update mini timer and text
+      const t = timeDiff(dt); //variable to calculate time remaining
+      if (t.past) { el.textContent = 'Race day!'; clearInterval(miniTimers[race.round]); return; } //if time past, show "Race day!" and clear the timer
+      el.textContent = t.days > 0 ? `${t.days}d ${pad(t.hours)}h` : `${pad(t.hours)}h ${pad(t.minutes)}m`; //if more than 1 day away, show days+hours, if not show hours+minutes
     };
-    update();
-    miniTimers[race.round] = setInterval(update, 30000);
+    update(); //runs and updates immediately
+    miniTimers[race.round] = setInterval(update, 30000); //repeats every 30 seconds
   });
 }
 
 /* ── Latest race results ─────────────────────────────────────
    Shows the podium + top 10 from the most recently completed race */
-function renderResults(data) {
-  const container = document.getElementById('resultsContainer');
-  const races = data?.MRData?.RaceTable?.Races;
-  if (!races || !races.length) {
-    container.innerHTML = errorHTML('No race results available yet.');
-    return;
+function renderResults(data) { //function, gets the API response
+  const container = document.getElementById('resultsContainer'); //variable to get the resultsContainer id
+  const races = data?.MRData?.RaceTable?.Races; //going through the response to get the arrays (MRData=Motor Racing Data, outer layer for response   ?="if this exists)
+  if (!races || !races.length) { //if no races and no how many races away
+    container.innerHTML = errorHTML('No race results available yet.'); //show an error message in the container
+    return; //stop
   }
 
-  const race    = races[0];
-  const results = race.Results || [];
-  const top10   = results.slice(0, 10);
-  const podium  = results.slice(0, 3);
-  const flResult = results.find(r => r.FastestLap?.rank === '1');
+  const race    = races[0]; //variable to get first race
+  const results = race.Results || []; //variable to get the driver results, or empty array if none
+  const top10   = results.slice(0, 10); //variable to take the first 10 results
+  const podium  = results.slice(0, 3); //variable to take the first 3 results
+  const flResult = results.find(r => r.FastestLap?.rank === '1'); //variable to go the driver results, find who is the fastest lap, and check the rank is equal to 1
 
   container.innerHTML = `
     <div class="results-wrapper">
@@ -406,7 +406,7 @@ function renderResults(data) {
         <div class="podium-title">🏆 Podium</div>
         <div class="podium-grid">
           ${podium.map((r, i) => {
-            const cls   = ['podium-1st','podium-2nd','podium-3rd'][i];
+            const cls   = ['podium-1st','podium-2nd','podium-3rd'][i]; //picks the css class based on location
             const order = [1, 0, 2][i]; // 2nd on left, 1st centre, 3rd right
             return `
               <div class="podium-item" style="order:${order}">
@@ -433,8 +433,8 @@ function renderResults(data) {
         <table class="results-table">
           <thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Pts</th></tr></thead>
           <tbody>
-            ${top10.map(r => {
-              const pos = parseInt(r.position, 10);
+            ${top10.map(r => { //loops through the 10 drivers
+              const pos = parseInt(r.position, 10); //converts text number (ex. ten to 10)
               const cls = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
               const fl  = r.FastestLap?.rank === '1';
               return `<tr>
@@ -701,11 +701,11 @@ async function loadStandings() {
 
 // Loads everything at once when the page opens
 async function loadAll() {
-  await loadSchedule();
+  await loadSchedule(); //fetches schedule and waits for it to finish
   await new Promise(r => setTimeout(r, 600)); //wait .6 seconds before next call
-  await loadResults();
+  await loadResults(); //fetch results and wait
   await new Promise(r => setTimeout(r, 600)); //wait .6 seconds before next call
-  await loadStandings();
+  await loadStandings(); //fetch standing and wait
 }
 
 /* ── Start everything when the page is ready ─────────────────*/
