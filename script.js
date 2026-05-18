@@ -120,10 +120,9 @@ async function apiFetch(url, cacheKey) { //get the URL to fetch and the key name
 
 /* ── Date/time helpers ───────────────────────────────────────*/
 
-// Combines a race's date + time into a single JavaScript Date object
-function raceDateTime(race) {
-  const time = race.time || '14:00:00Z';
-  return new Date(`${race.date}T${time}`);
+function raceDateTime(race) { //get race object
+  const time = race.time || '14:00:00Z'; //set the race time or 2 pm if no time was given
+  return new Date(`${race.date}T${time}`); //combine the timer and date into a js date object
 }
 
 
@@ -137,109 +136,104 @@ function formatDay(date) { //formats the weekday, day, month
 }
 
 // Returns days/hours/minutes/seconds until a target date
-function timeDiff(target) {
+function timeDiff(target) { //creates the countdown
   const diff = target - Date.now(); //the day and time of the race subracted by the date and time right now to get the time difference
-  if (diff <= 0) return { days:0, hours:0, minutes:0, seconds:0, past:true };
-  const s = Math.floor(diff / 1000);
+  if (diff <= 0) return { days:0, hours:0, minutes:0, seconds:0, past:true }; //if the time hits 0, past is true
+  const s = Math.floor(diff / 1000); //converts milliseconds to seconds
   return {
-    days:    Math.floor(s / 86400),
-    hours:   Math.floor((s % 86400) / 3600),
-    minutes: Math.floor((s % 3600) / 60),
-    seconds: s % 60,
-    past: false,
+    days:    Math.floor(s / 86400), //divide by 86400 (seconds in a day) to get days, round down
+    hours:   Math.floor((s % 86400) / 3600), // leftover seconds after removing days (divide by 3600 to get hours)
+    minutes: Math.floor((s % 3600) / 60), // leftover seconds after removing hours (divide by 60 to get minutes)
+    seconds: s % 60, //left over seconds
+    past: false, //race has not happened, past is false
   };
 }
 
 // Pads a number to always be 2 digits e.g. 5 → "05"
-function pad(n) { return String(n).padStart(2, '0'); }
+function pad(n) { return String(n).padStart(2, '0'); } //turn the number into strings, pad(n) makes it always 2 digits
 
 /* ── Small utility helpers ───────────────────────────────────*/
-function getFlag(country) { return COUNTRY_FLAGS[country] || '🏁'; }
-function getImg(name)     { return CIRCUIT_IMAGES[name]   || DEFAULT_IMG; }
-function teamColor(name) {
-  for (const [k,v] of Object.entries(TEAM_COLORS)) {
-    if (name && name.includes(k)) return v;
+function getFlag(country) { return COUNTRY_FLAGS[country] || '🏁'; } //gets the flag of the country in the flag list, if cannot find, we put a chequred flag
+function getImg(name)     { return CIRCUIT_IMAGES[name]   || DEFAULT_IMG; } //gets the img of the circuit in the circuit image list, if we cannot find, we put a default img
+function teamColor(name) { //gets team name
+  for (const [k,v] of Object.entries(TEAM_COLORS)) { //loop through the teams (k=key/team name, v=value/the color)
+    if (name && name.includes(k)) return v; //if list contains the team name, we return the color
   }
-  return '#888';
+  return '#888'; //return the color gray
 }
-function errorHTML(msg) {
-  return `<div class="error-state"><div class="error-icon">⚠️</div><p>${msg}</p></div>`;
+function errorHTML(msg) { //receive an error message string
+  return `<div class="error-state"><div class="error-icon">⚠️</div><p>${msg}</p></div>`; //DOM with the error message
 }
 
-/* ── Navbar ──────────────────────────────────────────────────
-   Makes the navbar sticky, highlights the active section link,
-   and handles the hamburger menu on mobile */
-function initNavbar() {
-  const navbar = document.getElementById('navbar');
-  const links  = document.querySelectorAll('.nav-link');
+// ── Navbar ──────────────────────────────────────────────────
+function initNavbar() { //setup the navbar
+  const navbar = document.getElementById('navbar'); //connects the element with the navbar
+  const links  = document.querySelectorAll('.nav-link'); //connects all nav-links 
 
-  window.addEventListener('scroll', () => {
-    // Add a shadow to the navbar once the user scrolls down
-    navbar.classList.toggle('scrolled', window.scrollY > 20);
-    // Show/hide the back-to-top button
-    document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400);
-    // Highlight the nav link for whichever section is on screen
-    let current = '';
-    ['hero','countdown','upcoming','results','standings','past'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && window.scrollY >= el.offsetTop - 100) current = id;
+  window.addEventListener('scroll', () => { //listens or waits for the user to scroll
+    navbar.classList.toggle('scrolled', window.scrollY > 20);  // add a shadow to the navbar once the user scrolls down more than 2-0px
+    document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400); //if the user scrolls more than 400px, show the back to the top button
+    let current = '';   //variable to store which section is on screen
+    ['hero','countdown','upcoming','results','standings','past'].forEach(id => { //loops every section
+      const el = document.getElementById(id); //finds the section element with the id
+      if (el && window.scrollY >= el.offsetTop - 100) current = id; //if the section and how much the user scrolls down iks greater than the top of the page minus 100px, this is where the user is
     });
-    links.forEach(l => {
-      const href = l.getAttribute('href').replace('#','');
-      l.classList.toggle('active', href === current);
+    links.forEach(l => { //loops the nav links
+      const href = l.getAttribute('href').replace('#',''); //gets the href and remove the #
+      l.classList.toggle('active', href === current); //if the link matches the current section, highlight it in the navbar
     });
-  }, { passive: true });
+  }, { passive: true }); //tells the browsaer to not block the scrolling
 
   // Hamburger open/close
-  const ham = document.getElementById('hamburger');
-  const nav = document.getElementById('navLinks');
-  ham.addEventListener('click', () => {
-    ham.classList.toggle('open');
-    nav.classList.toggle('open');
+  const ham = document.getElementById('hamburger'); //sets the hamburger element
+  const nav = document.getElementById('navLinks'); //sets the navbar/mobile nav menu
+  ham.addEventListener('click', () => { //listens for a click
+    ham.classList.toggle('open'); //add or remove "open"
+    nav.classList.toggle('open'); //add or remove "open" to show the menu/hide menu
   });
   // Close menu when a link is tapped
-  nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { // add a click listener to each to every link in the menu
     ham.classList.remove('open');
-    nav.classList.remove('open');
+    nav.classList.remove('open'); //remove or hide mobile menu
   }));
 
   // Back to top button scrolls the page to the very top
-  document.getElementById('backToTop').addEventListener('click', () =>
-    window.scrollTo({ top:0, behavior:'smooth' }));
+  document.getElementById('backToTop').addEventListener('click', () =>  //listens when back to top button is clicked
+    window.scrollTo({ top:0, behavior:'smooth' })); //scroll page to the top
 }
 
-/* ── Dark mode ───────────────────────────────────────────────
-   Toggles between light and dark, and remembers the choice */
-function initTheme() {
-  const toggle = document.getElementById('themeToggle');
-  const saved  = localStorage.getItem('f1hub-theme') || 'light';
-  document.documentElement.dataset.theme = saved;
-  toggle.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('f1hub-theme', next);
+// ── Dark mode ───────────────────────────────────────────────
+   
+function initTheme() { //set up light and dark mode
+  const toggle = document.getElementById('themeToggle'); //set the element themeToggle
+  const saved  = localStorage.getItem('f1hub-theme') || 'light'; //gets the save theme for the local storage, white is default
+  document.documentElement.dataset.theme = saved; //apply the save theme to the page
+  toggle.addEventListener('click', () => { //listens for a click on the toggle button
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; //interchanges between the 2 themes
+    document.documentElement.dataset.theme = next; //applies the theme to the whole page
+    localStorage.setItem('f1hub-theme', next); //sets it in the local storage
   });
 }
 
 /* ── Refresh button ──────────────────────────────────────────
    Clears saved data and re-fetches everything from the API */
 function initRefresh() {
-  document.getElementById('refreshBtn').addEventListener('click', () => {
-    ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k =>
-      localStorage.removeItem(k));
-    loadAll();
+  document.getElementById('refreshBtn').addEventListener('click', () => { //add an event listener to the element "refreshBTn" and waits for a click
+    ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => //loops through the schedule,e results, driver, and constructors
+      localStorage.removeItem(k)); //removes the results, schedule, driver, and constructors from the local storage
+    loadAll(); //retch from the api again
   });
 }
 
 /* ── Standings tabs ──────────────────────────────────────────
    Switches between Drivers and Constructors tables */
-function initTabs() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentTab = btn.dataset.tab;
-      renderStandings();
+function initTabs() { //setsup the standings
+  document.querySelectorAll('.tab-btn').forEach(btn => { //selects all the tab buttons
+    btn.addEventListener('click', () => { //add a event listener to the button, listens for click
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); //remove active from all btns
+      btn.classList.add('active'); //add active to all btns
+      currentTab = btn.dataset.tab; //save which tab is active to either the drivers or constructors
+      renderStandings(); //shows the standings
     });
   });
 }
@@ -247,13 +241,15 @@ function initTabs() {
 /* ── Next race / season complete card ────────────────────────
    Shows either a countdown to the next race, or the last race
    if the season is over */
-function renderNextRace(race, seasonOver) {
-  const card = document.getElementById('nextRaceCard');
-  const dt   = raceDateTime(race);
-  const flag = getFlag(race.Circuit.Location.country);
-  const img  = getImg(race.Circuit.circuitName);
+function renderNextRace(race, seasonOver) { //gets the race data and whether the season is over yet
+  const card = document.getElementById('nextRaceCard'); //gets the nextRaceCard element
+  const dt   = raceDateTime(race); //gets race date and time
+  const flag = getFlag(race.Circuit.Location.country); //gets country flag
+  const img  = getImg(race.Circuit.circuitName); //gets circuit image
 
-  card.innerHTML = `
+   
+  /* creates the dom for the race card*/
+   card.innerHTML = ` 
     <div class="nrc-hero">
       <img class="nrc-hero-img" src="${img}" alt="${race.raceName}" loading="lazy"/>
       <div class="nrc-hero-overlay"></div>
@@ -303,7 +299,7 @@ function renderNextRace(race, seasonOver) {
 }
 
 // Builds one countdown box (the dark square showing e.g. "12 DAYS")
-function countdownBoxHTML(val, unit) {
+function countdownBoxHTML(val, unit) { //creats the countdown box (val=the number, unit=the text shown below the number, ex. days, months)
   return `<div class="countdown-box">
     <span class="countdown-num">${val}</span>
     <span class="countdown-unit">${unit}</span>
@@ -311,19 +307,19 @@ function countdownBoxHTML(val, unit) {
 }
 
 // Updates the countdown numbers every second
-function startMainCountdown(target) {
-  if (countdownInterval) clearInterval(countdownInterval);
-  function tick() {
-    const boxes = document.querySelectorAll('#mainCountdown .countdown-num');
-    if (!boxes.length) { clearInterval(countdownInterval); return; }
-    const t = timeDiff(target);
-    const vals = [pad(t.days), pad(t.hours), pad(t.minutes), pad(t.seconds)];
-    boxes.forEach((box, i) => {
-      if (box.textContent !== vals[i]) {
-        box.textContent = vals[i];
-        box.classList.remove('flip');
+function startMainCountdown(target) { //countdown date
+  if (countdownInterval) clearInterval(countdownInterval); //if countdown running, clear it
+  function tick() { //function runs every sec
+    const boxes = document.querySelectorAll('#mainCountdown .countdown-num'); //gets all 4 elements in the countdown (the days, hrs, mins, seconds)
+    if (!boxes.length) { clearInterval(countdownInterval); return; } //if there are 0 boxes, clear the timer
+    const t = timeDiff(target); //t = remaining days, minuts, hours, seconds
+    const vals = [pad(t.days), pad(t.hours), pad(t.minutes), pad(t.seconds)]; //arrays of values
+    boxes.forEach((box, i) => { //loops the boxes
+      if (box.textContent !== vals[i]) { //updates if the numbers changes
+        box.textContent = vals[i]; //updates the number shown
+        box.classList.remove('flip'); //reset flip animation
         void box.offsetWidth; // forces the browser to restart the animation
-        box.classList.add('flip');
+        box.classList.add('flip'); //plays the animation
       }
     });
   }
