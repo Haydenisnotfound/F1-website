@@ -435,8 +435,8 @@ function renderResults(data) { //function, gets the API response
           <tbody>
             ${top10.map(r => { //loops through the 10 drivers
               const pos = parseInt(r.position, 10); //converts text number (ex. ten to 10)
-              const cls = pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-              const fl  = r.FastestLap?.rank === '1';
+              const cls = pos===1?'p1':pos===2?'p2':pos===3?'p3':''; //gives first gold, 2nd silver, 3rd bronze
+              const fl  = r.FastestLap?.rank === '1'; //variable is true if the driver sets. the fastest lap
               return `<tr>
                 <td><span class="result-pos ${cls}">${r.position}</span></td>
                 <td>
@@ -455,26 +455,26 @@ function renderResults(data) { //function, gets the API response
 
 /* ── Standings ───────────────────────────────────────────────
    Decides which standings table to show based on the active tab */
-function renderStandings() {
-  const container = document.getElementById('standingsContainer');
-  if (currentTab === 'drivers') renderDriverStandings(container);
-  else renderConstructorStandings(container);
+function renderStandings() { //function to decide which table to show
+  const container = document.getElementById('standingsContainer'); //variable to get the standingsContainer id
+  if (currentTab === 'drivers') renderDriverStandings(container); //if the current tab is drivers, render the driver standings
+  else renderConstructorStandings(container); //else, just show the constructor standing
 }
 
-function renderDriverStandings(container) {
-  if (!driverStandings.length) {
-    container.innerHTML = errorHTML('No driver standings available.');
-    return;
+function renderDriverStandings(container) { //function to get the container to put the table in
+  if (!driverStandings.length) { //if no drivers standings
+    container.innerHTML = errorHTML('No driver standings available.'); //print the error
+    return; //stop
   }
-  const maxPts = parseFloat(driverStandings[0]?.points || 1);
+  const maxPts = parseFloat(driverStandings[0]?.points || 1); //variable to get the leaders point as a decimal number (parseFloat). This is used to calculate the bar width
   container.innerHTML = `
     <div class="standings-table-wrap">
       <table class="standings-table">
         <thead><tr><th>Pos</th><th>Driver</th><th>Nationality</th><th style="text-align:right">Points</th></tr></thead>
         <tbody>
           ${driverStandings.slice(0,10).map(d => {
-            const pos  = parseInt(d.position, 10);
-            const barW = Math.max(4, Math.round((parseFloat(d.points) / maxPts) * 100));
+            const pos  = parseInt(d.position, 10); //converts the position into number
+            const barW = Math.max(4, Math.round((parseFloat(d.points) / maxPts) * 100)); //divide the driver's points by leader's points, multiply by 100 to get percentage with the minimum as 4 so bar is always visible
             return `<tr>
               <td><span class="st-pos ${pos===1?'p1':''}">${d.position}</span></td>
               <td>
@@ -491,21 +491,21 @@ function renderDriverStandings(container) {
     </div>`;
 }
 
-function renderConstructorStandings(container) {
-  if (!constructorStandings.length) {
-    container.innerHTML = errorHTML('No constructor standings available.');
-    return;
+function renderConstructorStandings(container) { //function to render the constructor standings
+  if (!constructorStandings.length) { //if no constructor standings
+    container.innerHTML = errorHTML('No constructor standings available.'); //show an error message
+    return; //stop
   }
-  const maxPts = parseFloat(constructorStandings[0]?.points || 1);
+  const maxPts = parseFloat(constructorStandings[0]?.points || 1); //max point is turned into decimal to calculate the bars length
   container.innerHTML = `
     <div class="standings-table-wrap">
       <table class="standings-table">
         <thead><tr><th>Pos</th><th>Constructor</th><th>Nationality</th><th style="text-align:right">Points</th></tr></thead>
         <tbody>
-          ${constructorStandings.slice(0,10).map(c => {
-            const pos = parseInt(c.position, 10);
-            const col = teamColor(c.Constructor.name);
-            const barW = Math.max(4, Math.round((parseFloat(c.points) / maxPts) * 100));
+          ${constructorStandings.slice(0,10).map(c => { //takes the top 10 constructors an loop them
+            const pos = parseInt(c.position, 10); //converts position into number
+            const col = teamColor(c.Constructor.name); //gets the team colors
+            const barW = Math.max(4, Math.round((parseFloat(c.points) / maxPts) * 100)); //divide the constructors's points by leader's points, multiply by 100 to get percentage with the minimum as 4 so bar is always visible
             return `<tr>
               <td><span class="st-pos ${pos===1?'p1':''}">${c.position}</span></td>
               <td>
@@ -524,22 +524,22 @@ function renderConstructorStandings(container) {
 
 /* ── Past race cards ─────────────────────────────────────────
    Builds the grid of completed races, most recent first */
-function renderPastRaceCards(races) {
-  const grid = document.getElementById('pastRacesGrid');
-  const past = races.filter(r => raceDateTime(r) <= Date.now());
+function renderPastRaceCards(races) { //function to render the past races
+  const grid = document.getElementById('pastRacesGrid'); //variable to get the pastRacesGrid ID
+  const past = races.filter(r => raceDateTime(r) <= Date.now()); //filters the past races by having the race date less than today (the difference)
 
-  if (!past.length) {
-    grid.innerHTML = '<p style="color:var(--gray);padding:32px;text-align:center">No completed races yet this season.</p>';
-    return;
+  if (!past.length) { //if no past races
+    grid.innerHTML = '<p style="color:var(--gray);padding:32px;text-align:center">No completed races yet this season.</p>'; //puts a message that no races have been completed this year
+    return; //stop
   }
 
 
   const reversed = [...past].reverse(); // Reverse so most recent is first
 
-  grid.innerHTML = reversed.map(race => {
-    const dt   = raceDateTime(race);
-    const flag = getFlag(race.Circuit.Location.country);
-    const img  = getImg(race.Circuit.circuitName);
+  grid.innerHTML = reversed.map(race => { //loops through the past races
+    const dt   = raceDateTime(race); //variable to get the race date and time
+    const flag = getFlag(race.Circuit.Location.country); //variable to get the countrys flag
+    const img  = getImg(race.Circuit.circuitName); //variable to get the image of the circuit
     return `
       <div class="race-card past-card" data-round="${race.round}">
         <div class="rc-img-wrap">
@@ -558,19 +558,19 @@ function renderPastRaceCards(races) {
           <div class="rc-click-hint">Tap for results →</div>
         </div>
       </div>`;
-  }).join('');
+  }).join(''); //joins all cards into a string
 
   // Attach click listeners — tapping a card opens the results popup
-  grid.querySelectorAll('.past-card').forEach(card => {
-    card.addEventListener('click', () => openModal(card.dataset.round));
+  grid.querySelectorAll('.past-card').forEach(card => { //finds every past race card and loop through them
+    card.addEventListener('click', () => openModal(card.dataset.round)); //add an event listener to the race card to wait a click, then open the popup using the round number stored on the card
   });
 }
 
 /* ── Modal popup ─────────────────────────────────────────────
    Opens when you tap a past race card and shows that race's results */
-async function openModal(round) {
-  const overlay = document.getElementById('modalOverlay');
-  const content = document.getElementById('modalContent');
+async function openModal(round) { //get the round number that was clicked 
+  const overlay = document.getElementById('modalOverlay'); //variable to get the dark background overlay
+  const content = document.getElementById('modalContent'); //variable to get the white popup box content area
 
   // Show a spinner while results load
   content.innerHTML = `<div class="grid-loading"><div class="spinner"></div><p>Loading results…</p></div>`;
@@ -579,20 +579,20 @@ async function openModal(round) {
 
   try {
     // Fetch results for this specific round number
-    const res  = await fetch(`${API_BASE}/current/${round}/results.json`);
-    const data = await res.json();
-    const race    = data?.MRData?.RaceTable?.Races?.[0];
-    const results = race?.Results || [];
+    const res  = await fetch(`${API_BASE}/current/${round}/results.json`); //variable to fetch results for this specific round number
+    const data = await res.json(); //converts response into usable data
+    const race    = data?.MRData?.RaceTable?.Races?.[0]; //goes through the response to get the race object
+    const results = race?.Results || []; //gets all drivers results, empty array if none
 
-    if (!race || !results.length) {
-      content.innerHTML = '<p style="padding:32px;text-align:center;color:var(--gray)">No results available yet.</p>';
-      return;
+    if (!race || !results.length) { //if no races
+      content.innerHTML = '<p style="padding:32px;text-align:center;color:var(--gray)">No results available yet.</p>'; //add message "No results available"
+      return; //stops
     }
 
-    const flDriver = results.find(r => r.FastestLap?.rank === '1');
+    const flDriver = results.find(r => r.FastestLap?.rank === '1'); //finds the driver who has the fast3est lap
 
     // Build the podium boxes for 1st, 2nd, 3rd
-    const podiumHTML = results.slice(0, 3).map((r, i) => `
+    const podiumHTML = results.slice(0, 3).map((r, i) => /*takes to p3 and loop through them*/`
       <div class="modal-podium-item">
         <div class="modal-podium-medal">${['🥇','🥈','🥉'][i]}</div>
         <div class="modal-podium-name">${r.Driver.givenName} ${r.Driver.familyName}</div>
@@ -684,23 +684,22 @@ async function loadResults() {
   }
 }
 
-async function loadStandings() {
+async function loadStandings() { //fetches the driver+constructor standings from API
   try {
-    const [drData, csData] = await Promise.all([
-      apiFetch(`${API_BASE}/current/driverStandings.json`, 'f1-drivers'),
-      apiFetch(`${API_BASE}/current/constructorStandings.json`, 'f1-constructors'),
+    const [drData, csData] = await Promise.all([ //fetch the driver and constructor data at the same time, promise all means to wait for both to finsih
+      apiFetch(`${API_BASE}/current/driverStandings.json`, 'f1-drivers'), //fetches the driver standing
+      apiFetch(`${API_BASE}/current/constructorStandings.json`, 'f1-constructors'), //fetches the constructor standings
     ]);
-    driverStandings      = drData?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
-    constructorStandings = csData?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings || [];
-    renderStandings();
-  } catch(err) {
-    console.error('Standings failed:', err);
-    document.getElementById('standingsContainer').innerHTML = errorHTML('Could not load standings.');
+    driverStandings      = drData?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || []; //goes through the response to get the drivers standings array
+    constructorStandings = csData?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings || []; //goes through the response to get the constructor standings array
+    renderStandings(); //renders the standings that are currently active
+  } catch(err) { //if there is an error,
+    console.error('Standings failed:', err); //console.log the error
+    document.getElementById('standingsContainer').innerHTML = errorHTML('Could not load standings.'); //print the error in the dom
   }
 }
 
-// Loads everything at once when the page opens
-async function loadAll() {
+async function loadAll() { //loads data one at a time
   await loadSchedule(); //fetches schedule and waits for it to finish
   await new Promise(r => setTimeout(r, 600)); //wait .6 seconds before next call
   await loadResults(); //fetch results and wait
