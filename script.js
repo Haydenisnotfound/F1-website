@@ -79,44 +79,41 @@ let constructorStandings = []; //constructor standings
 
 /* ── localStorage cache helpers ─────────────────────────────
    Saves API responses so we don't fetch the same data twice */
-function cacheSet(key, data) {
-  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch(_) {}
+function cacheSet(key, data) { //gets the keys name and the data 
+  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch(_) {} //in the local storage, we it a key, turn the data into a text string, add a timestamp. If it fails, ignore it
 }
-function cacheGet(key) {
+function cacheGet(key) { //gets the keyname to fetch with the API
   try {
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(key); //looks in the local storage to find any available data saved under the key name
     if (!raw) return null; //if no data, return nothing
-    const obj = JSON.parse(raw);
+    const obj = JSON.parse(raw); //convert the text string to usable data
     // If the saved data is older than CACHE_TTL, throw it away
-    if (Date.now() - obj.ts > CACHE_TTL) { localStorage.removeItem(key); return null; }
-    return obj.data;
-  } catch(_) { return null; }
+    if (Date.now() - obj.ts > CACHE_TTL) { localStorage.removeItem(key); return null; } //current time minus saved time, if older than 5 mins, delete it and return nothing
+    return obj.data; //returns the new data
+  } catch(_) { return null; } //if failed, return nothing
 }
 
-/* ── apiFetch ────────────────────────────────────────────────
-   Fetches a URL, with caching and up to 3 retries if it fails */
-async function apiFetch(url, cacheKey) {
-  // Return saved data straight away if it's still fresh
-  const cached = cacheGet(cacheKey);
-  if (cached) return cached;
+//── apiFetch ────────────────────────────────────────────────
+   
+async function apiFetch(url, cacheKey) { //get the URL to fetch and the key name to save it under
+  const cached = cacheGet(cacheKey); //check if we have data
+  if (cached) return cached; //if we do, return it and skip API call
 
-  // Try up to 3 times in case the API is slow or briefly down
-  for (let attempt = 1; attempt <= 3; attempt++) {
+ 
+  for (let attempt = 1; attempt <= 3; attempt++) {  // try up to 3 times in case the API is slow or briefly down. Starts at 1 attempt and add till 3
     try {
-      // Give the API 15 seconds to respond before giving up on this attempt
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 15000);
-      const res = await fetch(url, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
+      const controller = new AbortController();  // create a cancel controller for the fetch request
+      const timer = setTimeout(() => controller.abort(), 15000); //timer for 15 seconds, if longer, cancel the request
+      const res = await fetch(url, { signal: controller.signal, headers: { 'Accept': 'application/json' } }); // call the API, attach the cancel controller, tell the API to receive JSON back
+      clearTimeout(timer); //clear timer if we receive a response
+      if (!res.ok) throw new Error(`HTTP ${res.status}`); //if the API returned an error code, treat it as a failure
+      const json = await res.json(); //converts API response to data
       cacheSet(cacheKey, json); // save so next visit is instant
-      return json;
-    } catch (err) {
-      console.warn(`Attempt ${attempt} failed for ${url}:`, err.message);
-      if (attempt === 3) throw err; // all 3 tries failed — give up
-      // Wait before retrying (2s on first failure, 4s on second)
-      await new Promise(r => setTimeout(r, attempt * 2000));
+      return json; //return data
+    } catch (err) { //if error,
+      console.warn(`Attempt ${attempt} failed for ${url}:`, err.message); //console.log the warning that the API failed
+      if (attempt === 3) throw err; // all 3 tries failed, give up
+      await new Promise(r => setTimeout(r, attempt * 2000)); //wait 2s after 1st fail, 4s after 2nd fail
     }
   }
 }
@@ -673,11 +670,11 @@ async function loadSchedule() {
 
     renderRaceCards(allRaces);     // renders upcoming races grid
     renderPastRaceCards(allRaces); // renders past races grid
-  } catch(err) {
-    console.error('Schedule failed:', err);
-    document.getElementById('nextRaceCard').innerHTML = errorHTML('Could not load race data. Please try refreshing.');
-    document.getElementById('racesGrid').innerHTML    = errorHTML('Could not load race schedule.');
-    document.getElementById('pastRacesGrid').innerHTML = errorHTML('Could not load past races.');
+  } catch(err) { //if error,
+    console.error('Schedule failed:', err); //console.log schedule failed
+    document.getElementById('nextRaceCard').innerHTML = errorHTML('Could not load race data. Please try refreshing.'); //Puts a error message in dom for the "Big race card with countdown" section
+    document.getElementById('racesGrid').innerHTML    = errorHTML('Could not load race schedule.'); //Puts a error message in dom for the "race schedule" section
+    document.getElementById('pastRacesGrid').innerHTML = errorHTML('Could not load past races.'); //Puts a error message in dom for the "past Race" section
   }
 }
 
@@ -709,18 +706,18 @@ async function loadStandings() {
 // Loads everything at once when the page opens
 async function loadAll() {
   await loadSchedule();
-  await new Promise(r => setTimeout(r, 600));
+  await new Promise(r => setTimeout(r, 600)); //wait .6 seconds before next call
   await loadResults();
-  await new Promise(r => setTimeout(r, 600));
+  await new Promise(r => setTimeout(r, 600)); //wait .6 seconds before next call
   await loadStandings();
 }
 
 /* ── Start everything when the page is ready ─────────────────*/
 document.addEventListener('DOMContentLoaded', () => {
-  initNavbar();
-  initTheme();
-  initRefresh();
-  initTabs();
-  initModal();
-  loadAll();
+  initNavbar(); //setup navbar
+  initTheme(); //set up the dark/light mode
+  initRefresh(); //set up refresh button
+  initTabs(); //set up standing tabs
+  initModal(); //set up past rice
+  loadAll(); //fetch all data from API
 });
