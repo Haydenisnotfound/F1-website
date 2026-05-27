@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '9'; /*current version number */
+const CACHE_VERSION = '10'; /*current version number */
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 9, */
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
     localStorage.removeItem(k)); /* removes all the info */
@@ -250,8 +250,8 @@ function buildWeekendSchedule(race) {
 
     const localTime = formatLocalTime(dateStr, timeStr); //convert the session time to the user's local time
 
-    rows += ` //add this session as a row in the schedule
-      <div class="ws-row ws-${session.icon}">
+    rows +=
+      `<div class="ws-row ws-${session.icon}">
         <div class="ws-session-name">${session.label}</div>
         <div class="ws-session-day">${dayLabel}</div>
         <div class="ws-session-time">${localTime}</div>
@@ -276,27 +276,27 @@ function openRaceWeekendModal(race) { //gets the race object that was tapped
 
   const scheduleHTML = buildWeekendSchedule(race); //build the weekend schedule HTML rows
 
-  content.innerHTML = ` //build and insert the popup content
-    <div class="rw-header">
-      <img class="rw-img" src="${img}" alt="${race.raceName}" loading="lazy"/> <!-- circuit background photo -->
-      <div class="rw-img-overlay"></div> <!-- dark gradient so text is readable -->
+  // build and insert the popup content into the modal
+  content.innerHTML =
+    `<div class="rw-header">
+      <img class="rw-img" src="${img}" alt="${race.raceName}" loading="lazy"/>
+      <div class="rw-img-overlay"></div>
       <div class="rw-header-text">
-        <div class="rw-round">Round ${race.round} · ${race.season}</div> <!-- e.g. "Round 5 · 2026" -->
-        <div class="rw-name">${race.raceName.replace(' Grand Prix', '')}<br/>Grand Prix</div> <!-- race name split across two lines -->
-        <div class="rw-location">${flag} ${race.Circuit.circuitName} — ${country}</div> <!-- flag, circuit, country -->
+        <div class="rw-round">Round ${race.round} · ${race.season}</div>
+        <div class="rw-name">${race.raceName.replace(' Grand Prix', '')}<br/>Grand Prix</div>
+        <div class="rw-location">${flag} ${race.Circuit.circuitName} — ${country}</div>
       </div>
     </div>
-
     <div class="rw-body">
-      ${cityTime ? ` //only show the city clock if we have a timezone for this city
-      <div class="rw-city-time">
-        <span class="rw-city-time-label">🕐 Local time in ${locality}</span> <!-- label showing which city -->
-        <span class="rw-city-time-value" id="cityTimeLive">${cityTime}</span> <!-- live clock — updates every second -->
-      </div>` : ''}
-
-      <div class="rw-schedule-title">📅 Race Weekend Schedule <span class="rw-tz-note">(your local time)</span></div> <!-- section title -->
+      ${cityTime
+        ? `<div class="rw-city-time">
+            <span class="rw-city-time-label">🕐 Local time in ${locality}</span>
+            <span class="rw-city-time-value" id="cityTimeLive">${cityTime}</span>
+           </div>`
+        : ''}
+      <div class="rw-schedule-title">📅 Race Weekend Schedule <span class="rw-tz-note">(your local time)</span></div>
       <div class="rw-schedule">
-        ${scheduleHTML || '<p style="color:var(--gray);padding:16px">Schedule not yet available.</p>'} <!-- all session rows, or a message if none -->
+        ${scheduleHTML || '<p style="color:var(--gray);padding:16px">Schedule not yet available.</p>'}
       </div>
     </div>`;
 
