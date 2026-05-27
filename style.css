@@ -1061,16 +1061,18 @@ input { font-family: var(--font-body); }
 }
 .modal-overlay.open .modal-box { transform: translateY(0); }
 
+/* X button sits above the header image with a dark background so it's always visible */
 .modal-close {
   position: absolute;
-  top: 16px; right: 20px;
-  font-size: 1.6rem;
-  color: var(--gray);
-  background: var(--light-gray);
+  top: 12px; right: 12px;
+  font-size: 1.4rem;
+  color: #fff;
+  background: rgba(0,0,0,0.5);
   border-radius: 50%;
   width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
   line-height: 1;
+  z-index: 10;
   transition: background var(--transition), color var(--transition);
 }
 .modal-close:hover { background: var(--red); color: #fff; }
