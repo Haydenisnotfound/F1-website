@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '10'; /*current version number */
+const CACHE_VERSION = '11'; /*current version number */
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 9, */
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
     localStorage.removeItem(k)); /* removes all the info */
@@ -68,6 +68,7 @@ const CITY_TIMEZONES = {
   'Miami':       'America/New_York',    //usa (miami uses eastern time)
   'Imola':       'Europe/Rome',         //italy
   'Monaco':      'Europe/Monaco',       //monaco
+  'Monte-Carlo': 'Europe/Monaco',       //monaco (API uses Monte-Carlo as the city name)
   'Barcelona':   'Europe/Madrid',       //spain
   'Montreal':    'America/Toronto',     //canada
   'Spielberg':   'Europe/Vienna',       //austria
