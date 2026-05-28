@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '14'; /*current version number */
+const CACHE_VERSION = '15'; /*current version number */
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 9, */
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
     localStorage.removeItem(k)); /* removes all the info */
@@ -129,6 +129,7 @@ const CITY_TIMEZONES = {
   'Monza':       'Europe/Rome',         //italy
   'Baku':        'Asia/Baku',           //azerbaijan
   'Singapore':   'Asia/Singapore',      //singapore
+  'Marina Bay':  'Asia/Singapore',      //singapore (API uses Marina Bay as the city name)
   'Austin':      'America/Chicago',     //usa (austin uses central time)
   'Mexico City': 'America/Mexico_City', //mexico
   'São Paulo':   'America/Sao_Paulo',   //brazil
