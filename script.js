@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '13'; /*current version number */
+const CACHE_VERSION = '14'; /*current version number */
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 9, */
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
     localStorage.removeItem(k)); /* removes all the info */
@@ -13,6 +13,55 @@ if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage 
 /* ── API base URL ──────────────────────────────────────────── */
 const API_BASE  = 'https://api.jolpi.ca/ergast/f1'; /*API Websites (calls the API) */
 const CACHE_TTL = 5 * 60 * 1000; // how long to keep saved data (5 minutes)
+
+/* ── Web Audio sounds ────────────────────────────────────────
+   Uses the browser's built-in Web Audio API to generate sounds
+   without needing any external sound files */
+
+// create one shared AudioContext — the browser's sound engine
+let audioCtx = null;
+
+function getAudioCtx() {
+  // browsers block audio until the user interacts with the page
+  // so we create it lazily on first use
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// plays a short tick sound every second on the countdown
+function playTick() {
+  try {
+    const ctx = getAudioCtx(); // get the sound engine
+    const osc = ctx.createOscillator(); // creates a sound wave
+    const gain = ctx.createGain(); // controls the volume
+    osc.connect(gain); // connect oscillator to volume
+    gain.connect(ctx.destination); // connect volume to speakers
+    osc.type = 'sine'; // sine = smooth soft tone
+    osc.frequency.setValueAtTime(880, ctx.currentTime); // 880hz = high A note
+    gain.gain.setValueAtTime(0.04, ctx.currentTime); // very quiet
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08); // fade out fast
+    osc.start(ctx.currentTime); // start now
+    osc.stop(ctx.currentTime + 0.08); // stop after 0.08 seconds (very short tick)
+  } catch(_) {} // if sound fails, silently ignore
+}
+
+// plays a click sound when a popup opens
+function playClick() {
+  try {
+    const ctx = getAudioCtx(); // get the sound engine
+    const osc = ctx.createOscillator(); // creates a sound wave
+    const gain = ctx.createGain(); // controls the volume
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine'; // smooth tone
+    osc.frequency.setValueAtTime(440, ctx.currentTime); // 440hz = middle A note
+    osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.1); // pitch drops slightly
+    gain.gain.setValueAtTime(0.15, ctx.currentTime); // slightly louder than tick
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15); // fade out
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15); // stop after 0.15 seconds
+  } catch(_) {} // if sound fails, silently ignore
+}
 
 // ── Circuit background images ───────────────────────────────
 const CIRCUIT_IMAGES = {
@@ -304,6 +353,7 @@ function openRaceWeekendModal(race) { //gets the race object that was tapped
 
   overlay.classList.add('open'); //add "open" class to make the popup visible
   document.body.style.overflow = 'hidden'; //stop the page from scrolling behind the popup
+  playClick(); // play a click sound when the popup opens
 
   const tz = CITY_TIMEZONES[locality]; //look up the timezone for this city
   if (tz) { //if we have a timezone, start a live clock
@@ -468,6 +518,7 @@ function startMainCountdown(target) { //gets the countdown target date
         box.classList.remove('flip'); //reset flip animation
         void box.offsetWidth; // forces the browser to restart the animation
         box.classList.add('flip'); //plays the flip animation
+        if (i === 3) playTick(); // play a tick sound when the seconds change
       }
     });
   }
@@ -729,6 +780,7 @@ async function openModal(round) { //gets the round number that was clicked
   content.innerHTML = `<div class="grid-loading"><div class="spinner"></div><p>Loading results…</p></div>`; //show a loading spinner while we fetch
   overlay.classList.add('open'); // make popup visible
   document.body.style.overflow = 'hidden'; // stop page scrolling behind popup
+  playClick(); // play a click sound when the popup opens
 
   try {
     const res  = await fetch(`${API_BASE}/current/${round}/results.json`); //variable to fetch results for this specific round number
