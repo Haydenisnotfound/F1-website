@@ -322,7 +322,7 @@ function formatLocalTime(dateStr, timeStr) {
   });
 }
 
-/* ── NEW: Get the current live time in a race city ───────────
+/* ── Get the current live time in a race city ───────────
    uses JavaScript's built-in Intl — no external API needed */
 function getCityTime(locality) {
   const tz = CITY_TIMEZONES[locality]; //look up the timezone for this city
@@ -337,7 +337,7 @@ function getCityTime(locality) {
   }).format(new Date()); //format right now in that city's timezone
 }
 
-/* ── NEW: Build the race weekend schedule HTML ───────────────
+/* ──  Build the race weekend schedule HTML ───────────────
    takes a race object from the API and builds a list of all
    session times (FP1, FP2, FP3, Quali, Sprint, Race)
    converted to the user's local timezone */
@@ -384,7 +384,7 @@ function buildWeekendSchedule(race) {
   return rows; //return all session rows as one HTML string
 }
 
-/* ── NEW: Open the race weekend popup ────────────────────────
+/* ── Open the race weekend popup ────────────────────────
    called when an upcoming race card is tapped
    shows the live local time in the race city + full weekend schedule */
 function openRaceWeekendModal(race) { //gets the race object that was tapped
