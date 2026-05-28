@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '15'; /*current version number */
+const CACHE_VERSION = '17'; /*current version number */
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 9, */
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
     localStorage.removeItem(k)); /* removes all the info */
@@ -28,21 +28,92 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-// plays a short tick sound every second on the countdown
+// plays a short F1 engine rev sound every second on the countdown
+// simulates the sound of an F1 car revving using sawtooth waves
 function playTick() {
   try {
     const ctx = getAudioCtx(); // get the sound engine
-    const osc = ctx.createOscillator(); // creates a sound wave
+
+    // sawtooth wave sounds harsh and buzzy — closest to an engine sound
+    const osc = ctx.createOscillator(); // main engine tone
+    const osc2 = ctx.createOscillator(); // second oscillator adds depth
     const gain = ctx.createGain(); // controls the volume
-    osc.connect(gain); // connect oscillator to volume
-    gain.connect(ctx.destination); // connect volume to speakers
-    osc.type = 'sine'; // sine = smooth soft tone
-    osc.frequency.setValueAtTime(880, ctx.currentTime); // 880hz = high A note
-    gain.gain.setValueAtTime(0.04, ctx.currentTime); // very quiet
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08); // fade out fast
-    osc.start(ctx.currentTime); // start now
-    osc.stop(ctx.currentTime + 0.08); // stop after 0.08 seconds (very short tick)
+
+    // a distortion node makes it sound rougher like a real engine
+    const distortion = ctx.createWaveShaper();
+    const curve = new Float32Array(256); // create a distortion curve
+    for (let i = 0; i < 256; i++) {
+      const x = (i * 2) / 256 - 1;
+      curve[i] = (Math.PI + 200) * x / (Math.PI + 200 * Math.abs(x)); // soft clipping distortion
+    }
+    distortion.curve = curve; // apply the distortion curve
+
+    osc.connect(distortion); // connect oscillator through distortion
+    osc2.connect(distortion);
+    distortion.connect(gain); // connect distortion to volume
+    gain.connect(ctx.destination); // connect to speakers
+
+    osc.type = 'sawtooth'; // sawtooth = harsh buzzy engine sound
+    osc2.type = 'sawtooth'; // second layer
+    osc.frequency.setValueAtTime(80, ctx.currentTime); // 80hz = low engine rumble
+    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.15); // rev up quickly
+    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.35); // drop back down
+    osc2.frequency.setValueAtTime(160, ctx.currentTime); // second layer slightly higher
+    osc2.frequency.exponentialRampToValueAtTime(360, ctx.currentTime + 0.15); // rev up
+    osc2.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.35); // drop back
+
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime); // start silent
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.05); // rev up loud fast
+    gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.2); // settle
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4); // fade out
+
+    osc.start(ctx.currentTime);
+    osc2.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4); // stop after 0.4 seconds
+    osc2.stop(ctx.currentTime + 0.4);
   } catch(_) {} // if sound fails, silently ignore
+}
+
+// plays a big engine rev when the countdown hits zero — lights out!
+function playLightsOut() {
+  try {
+    const ctx = getAudioCtx(); // get the sound engine
+
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const distortion = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i * 2) / 256 - 1;
+      curve[i] = (Math.PI + 300) * x / (Math.PI + 300 * Math.abs(x));
+    }
+    distortion.curve = curve;
+
+    osc.connect(distortion);
+    osc2.connect(distortion);
+    distortion.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.type = 'sawtooth';
+    osc2.type = 'sawtooth';
+
+    // big rev that climbs much higher — like the car accelerating away
+    osc.frequency.setValueAtTime(80, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.8); // big rev up
+    osc2.frequency.setValueAtTime(160, ctx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.8);
+
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.1); // loud
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.0); // fade out after 1 second
+
+    osc.start(ctx.currentTime);
+    osc2.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 1.0);
+    osc2.stop(ctx.currentTime + 1.0);
+  } catch(_) {}
 }
 
 // plays a click sound when a popup opens
@@ -512,6 +583,14 @@ function startMainCountdown(target) { //gets the countdown target date
     const boxes = document.querySelectorAll('#mainCountdown .countdown-num'); //gets all 4 number elements in the countdown (days, hrs, mins, seconds)
     if (!boxes.length) { clearInterval(countdownInterval); return; } //if there are 0 boxes on the page, clear the timer
     const t = timeDiff(target); //t = remaining days, minutes, hours, seconds
+
+    // if the countdown just hit zero, play the lights out sound
+    if (t.past) {
+      playLightsOut(); // play 3 descending beeps — lights are out, go go go!
+      clearInterval(countdownInterval); // stop the countdown ticking
+      return;
+    }
+
     const vals = [pad(t.days), pad(t.hours), pad(t.minutes), pad(t.seconds)]; //array of padded values e.g. ["09","16","35","22"]
     boxes.forEach((box, i) => { //loops through each of the 4 boxes
       if (box.textContent !== vals[i]) { //only update if the number has actually changed
@@ -519,7 +598,7 @@ function startMainCountdown(target) { //gets the countdown target date
         box.classList.remove('flip'); //reset flip animation
         void box.offsetWidth; // forces the browser to restart the animation
         box.classList.add('flip'); //plays the flip animation
-        if (i === 3) playTick(); // play a tick sound when the seconds change
+        if (i === 3) playTick(); // play the red lights beep when seconds change
       }
     });
   }
