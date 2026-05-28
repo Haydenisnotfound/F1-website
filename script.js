@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '11'; /*current version number */
+const CACHE_VERSION = '13'; /*current version number */
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 9, */
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
     localStorage.removeItem(k)); /* removes all the info */
@@ -68,7 +68,8 @@ const CITY_TIMEZONES = {
   'Miami':       'America/New_York',    //usa (miami uses eastern time)
   'Imola':       'Europe/Rome',         //italy
   'Monaco':      'Europe/Monaco',       //monaco
-  'Monte-Carlo': 'Europe/Monaco',       //monaco (API uses Monte-Carlo as the city name)
+  'Monte-Carlo': 'Europe/Monaco',       //monaco with hyphen
+  'Monte Carlo': 'Europe/Monaco',       //monaco as API returns it (two words no hyphen)
   'Barcelona':   'Europe/Madrid',       //spain
   'Montreal':    'America/Toronto',     //canada
   'Spielberg':   'Europe/Vienna',       //austria
@@ -224,8 +225,8 @@ function buildWeekendSchedule(race) {
     { key: 'FirstPractice',    label: '🔧 Practice 1',         icon: 'fp' },
     { key: 'SecondPractice',   label: '🔧 Practice 2',         icon: 'fp' },
     { key: 'ThirdPractice',    label: '🔧 Practice 3',         icon: 'fp' },
-    { key: 'Sprint',           label: '⚡ Sprint Race',         icon: 'sprint' },
     { key: 'SprintQualifying', label: '⚡ Sprint Qualifying',   icon: 'sprint' },
+    { key: 'Sprint',           label: '⚡ Sprint Race',         icon: 'sprint' },
     { key: 'Qualifying',       label: '🏁 Qualifying',          icon: 'quali' },
     { key: 'date',             label: '🏆 Race',                icon: 'race', isRace: true },
   ];
