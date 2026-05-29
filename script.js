@@ -3,7 +3,7 @@
 /* ── Cache busting ───────────────────────────────────────────
    Every time we update the site, we bump this number.
    That wipes the old saved data so fresh data gets loaded. */
-const CACHE_VERSION = '17'; /*current version number */
+const CACHE_VERSION = '18'; /*current version number */
 if (localStorage.getItem('f1hub-version') !== CACHE_VERSION) { /* local storage finds the website version and if not cache version number 9, */
   ['f1-schedule','f1-results','f1-drivers','f1-constructors'].forEach(k => /*we get the results, schedule, drivers, constuctors info and remove it */
     localStorage.removeItem(k)); /* removes all the info */
@@ -219,6 +219,34 @@ const TEAM_COLORS = {
   'Haas':'#B6BABD',
 };
 
+/* ── 2026 Driver data ───────────────────────────────────────
+   driver id matches the API's driverId field
+   photo URLs are from Wikipedia — high quality official press photos */
+const DRIVER_DATA = {
+  'max_verstappen':   { name:'Max Verstappen',       nat:'🇳🇱 Dutch',        team:'Red Bull',       num:1,  photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Max_Verstappen_2023_portrait.jpg/440px-Max_Verstappen_2023_portrait.jpg' },
+  'norris':           { name:'Lando Norris',          nat:'🇬🇧 British',       team:'McLaren',        num:4,  photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Lando_Norris_2023_portrait.jpg/440px-Lando_Norris_2023_portrait.jpg' },
+  'leclerc':          { name:'Charles Leclerc',       nat:'🇲🇨 Monegasque',   team:'Ferrari',        num:16, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Charles_Leclerc_2023_portrait.jpg/440px-Charles_Leclerc_2023_portrait.jpg' },
+  'piastri':          { name:'Oscar Piastri',         nat:'🇦🇺 Australian',    team:'McLaren',        num:81, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Oscar_Piastri_2023_portrait.jpg/440px-Oscar_Piastri_2023_portrait.jpg' },
+  'russell':          { name:'George Russell',        nat:'🇬🇧 British',       team:'Mercedes',       num:63, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/George_Russell_2023_portrait.jpg/440px-George_Russell_2023_portrait.jpg' },
+  'hamilton':         { name:'Lewis Hamilton',        nat:'🇬🇧 British',       team:'Ferrari',        num:44, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Lewis_Hamilton_2016_Malaysia_2.jpg/440px-Lewis_Hamilton_2016_Malaysia_2.jpg' },
+  'antonelli':        { name:'Andrea Kimi Antonelli', nat:'🇮🇹 Italian',       team:'Mercedes',       num:12, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Kimi_Antonelli_2024_portrait.jpg/440px-Kimi_Antonelli_2024_portrait.jpg' },
+  'alonso':           { name:'Fernando Alonso',       nat:'🇪🇸 Spanish',       team:'Aston Martin',   num:14, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Fernando_Alonso_2023_portrait.jpg/440px-Fernando_Alonso_2023_portrait.jpg' },
+  'hulkenberg':       { name:'Nico Hülkenberg',       nat:'🇩🇪 German',        team:'Audi',           num:27, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Nico_H%C3%BClkenberg_2023_portrait.jpg/440px-Nico_H%C3%BClkenberg_2023_portrait.jpg' },
+  'sainz':            { name:'Carlos Sainz',          nat:'🇪🇸 Spanish',       team:'Williams',       num:55, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Carlos_Sainz_Jr._2023_portrait.jpg/440px-Carlos_Sainz_Jr._2023_portrait.jpg' },
+  'stroll':           { name:'Lance Stroll',          nat:'🇨🇦 Canadian',      team:'Aston Martin',   num:18, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Lance_Stroll_2023_portrait.jpg/440px-Lance_Stroll_2023_portrait.jpg' },
+  'gasly':            { name:'Pierre Gasly',          nat:'🇫🇷 French',        team:'Alpine',         num:10, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Pierre_Gasly_2023_portrait.jpg/440px-Pierre_Gasly_2023_portrait.jpg' },
+  'albon':            { name:'Alex Albon',            nat:'🇹🇭 Thai-British',   team:'Williams',       num:23, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Alex_Albon_2023_portrait.jpg/440px-Alex_Albon_2023_portrait.jpg' },
+  'colapinto':        { name:'Franco Colapinto',      nat:'🇦🇷 Argentine',     team:'Alpine',         num:43, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Franco_Colapinto_2024_portrait.jpg/440px-Franco_Colapinto_2024_portrait.jpg' },
+  'ocon':             { name:'Esteban Ocon',          nat:'🇫🇷 French',        team:'Haas',           num:31, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Esteban_Ocon_2023_portrait.jpg/440px-Esteban_Ocon_2023_portrait.jpg' },
+  'bearman':          { name:'Oliver Bearman',        nat:'🇬🇧 British',       team:'Haas',           num:87, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Oliver_Bearman_2024_portrait.jpg/440px-Oliver_Bearman_2024_portrait.jpg' },
+  'lawson':           { name:'Liam Lawson',           nat:'🇳🇿 New Zealand',   team:'Racing Bulls',   num:30, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Liam_Lawson_2024_portrait.jpg/440px-Liam_Lawson_2024_portrait.jpg' },
+  'lindblad':         { name:'Arvid Lindblad',        nat:'🇬🇧 British',       team:'Racing Bulls',   num:6,  photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Arvid_Lindblad_2024.jpg/440px-Arvid_Lindblad_2024.jpg' },
+  'bortoleto':        { name:'Gabriel Bortoleto',     nat:'🇧🇷 Brazilian',     team:'Audi',           num:5,  photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Gabriel_Bortoleto_2024_portrait.jpg/440px-Gabriel_Bortoleto_2024_portrait.jpg' },
+  'bottas':           { name:'Valtteri Bottas',       nat:'🇫🇮 Finnish',       team:'Sauber',         num:77, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Valtteri_Bottas_2023_portrait.jpg/440px-Valtteri_Bottas_2023_portrait.jpg' },
+  'perez':            { name:'Sergio Pérez',          nat:'🇲🇽 Mexican',       team:'Red Bull',       num:11, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Sergio_P%C3%A9rez_2023_portrait.jpg/440px-Sergio_P%C3%A9rez_2023_portrait.jpg' },
+  'hadjar':           { name:'Isack Hadjar',          nat:'🇫🇷 French',        team:'Red Bull',       num:22, photo:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Isack_Hadjar_2025_portrait.jpg/440px-Isack_Hadjar_2025_portrait.jpg' },
+};
+
 /* ── App state ───────────────────────────────────────────────
    variables that hold data */
 let allRaces             = [];   // every race in the season
@@ -322,7 +350,7 @@ function formatLocalTime(dateStr, timeStr) {
   });
 }
 
-/* ── Get the current live time in a race city ───────────
+/* ── NEW: Get the current live time in a race city ───────────
    uses JavaScript's built-in Intl — no external API needed */
 function getCityTime(locality) {
   const tz = CITY_TIMEZONES[locality]; //look up the timezone for this city
@@ -337,7 +365,7 @@ function getCityTime(locality) {
   }).format(new Date()); //format right now in that city's timezone
 }
 
-/* ──  Build the race weekend schedule HTML ───────────────
+/* ── NEW: Build the race weekend schedule HTML ───────────────
    takes a race object from the API and builds a list of all
    session times (FP1, FP2, FP3, Quali, Sprint, Race)
    converted to the user's local timezone */
@@ -384,7 +412,7 @@ function buildWeekendSchedule(race) {
   return rows; //return all session rows as one HTML string
 }
 
-/* ── Open the race weekend popup ────────────────────────
+/* ── NEW: Open the race weekend popup ────────────────────────
    called when an upcoming race card is tapped
    shows the live local time in the race city + full weekend schedule */
 function openRaceWeekendModal(race) { //gets the race object that was tapped
@@ -441,6 +469,127 @@ function openRaceWeekendModal(race) { //gets the race object that was tapped
   }
 }
 
+/* ── Render driver cards ─────────────────────────────────────
+   builds the drivers section grid and attaches click listeners */
+function renderDriverCards(standings) {
+  const grid = document.getElementById('driversGrid');
+  if (!grid) return;
+
+  if (!standings.length) {
+    grid.innerHTML = '<p style="color:var(--gray);padding:32px;text-align:center">No driver data available.</p>';
+    return;
+  }
+
+  grid.innerHTML = standings.map(d => {
+    const id    = d.Driver.driverId; // unique driver id from the API
+    const info  = DRIVER_DATA[id] || {}; // look up our extra data
+    const photo = info.photo || 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png';
+    const col   = teamColor(d.Constructors[0]?.name || '');
+    const pos   = parseInt(d.position, 10);
+
+    return `
+      <div class="driver-card" data-driver-id="${id}" style="cursor:pointer">
+        <div class="dc-img-wrap">
+          <div class="dc-pos-badge" style="background:${pos===1?'#ffc107':pos===2?'#9e9e9e':pos===3?'#cd7f32':'var(--red)'}">${d.position}</div>
+          <img class="dc-img" src="${photo}" alt="${d.Driver.givenName} ${d.Driver.familyName}" loading="lazy" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png'"/>
+          <div class="dc-team-bar" style="background:${col}"></div>
+        </div>
+        <div class="dc-body">
+          <div class="dc-name">${d.Driver.givenName} <strong>${d.Driver.familyName}</strong></div>
+          <div class="dc-team" style="color:${col}">${d.Constructors[0]?.name || '—'}</div>
+          <div class="dc-pts-row">
+            <span class="dc-pts">${d.points}</span>
+            <span class="dc-pts-label">PTS</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // attach click listener to every driver card to open the popup
+  grid.querySelectorAll('.driver-card').forEach(card => {
+    card.addEventListener('click', () => openDriverModal(card.dataset.driverId, standings));
+  });
+}
+
+/* ── Open driver detail popup ────────────────────────────────
+   shows full driver info when a card is tapped */
+function openDriverModal(driverId, standings) {
+  const overlay = document.getElementById('modalOverlay');
+  const content = document.getElementById('modalContent');
+
+  const d    = standings.find(d => d.Driver.driverId === driverId); // find this driver
+  if (!d) return;
+
+  const info  = DRIVER_DATA[driverId] || {};
+  const photo = info.photo || 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png';
+  const col   = teamColor(d.Constructors[0]?.name || '');
+  const pos   = parseInt(d.position, 10);
+  const posLabel = pos===1?'🥇 1st':pos===2?'🥈 2nd':pos===3?'🥉 3rd':'P'+d.position;
+
+  const maxPts = parseFloat(standings[0]?.points || 1);
+  const barW   = Math.max(4, Math.round((parseFloat(d.points) / maxPts) * 100));
+
+  content.innerHTML = `
+    <div class="dm-header" style="border-top:4px solid ${col}">
+      <img class="dm-photo" src="${photo}" alt="${d.Driver.givenName} ${d.Driver.familyName}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png'"/>
+      <div class="dm-header-info">
+        <div class="dm-pos-label">${posLabel}</div>
+        <div class="dm-name">${d.Driver.givenName}<br/><strong>${d.Driver.familyName}</strong></div>
+        <div class="dm-team" style="color:${col}">${d.Constructors[0]?.name || '—'}</div>
+        <div class="dm-nat">${info.nat || d.Driver.nationality}</div>
+      </div>
+    </div>
+
+    <div class="dm-stats">
+      <div class="dm-stat">
+        <div class="dm-stat-label">Car Number</div>
+        <div class="dm-stat-value" style="color:${col}">#${info.num || d.Driver.permanentNumber || '—'}</div>
+      </div>
+      <div class="dm-stat">
+        <div class="dm-stat-label">Nationality</div>
+        <div class="dm-stat-value">${d.Driver.nationality}</div>
+      </div>
+      <div class="dm-stat">
+        <div class="dm-stat-label">Date of Birth</div>
+        <div class="dm-stat-value">${new Date(d.Driver.dateOfBirth).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+      <div class="dm-stat">
+        <div class="dm-stat-label">Driver Code</div>
+        <div class="dm-stat-value" style="color:${col}">${d.Driver.code || '—'}</div>
+      </div>
+    </div>
+
+    <div class="dm-points-section">
+      <div class="dm-points-header">
+        <span class="dm-points-label">Championship Points</span>
+        <span class="dm-points-val" style="color:${col}">${d.points} pts</span>
+      </div>
+      <div class="dm-points-bar-bg">
+        <div class="dm-points-bar" style="width:${barW}%;background:${col}"></div>
+      </div>
+      <div class="dm-points-sub">${barW}% of championship leader's points</div>
+    </div>
+
+    <div class="dm-wins-row">
+      <div class="dm-win-box">
+        <div class="dm-win-num">${d.wins}</div>
+        <div class="dm-win-label">Wins</div>
+      </div>
+      <div class="dm-win-box">
+        <div class="dm-win-num">${d.points}</div>
+        <div class="dm-win-label">Points</div>
+      </div>
+      <div class="dm-win-box">
+        <div class="dm-win-num">P${d.position}</div>
+        <div class="dm-win-label">Standing</div>
+      </div>
+    </div>`;
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  playClick();
+}
+
 // ── Navbar ──────────────────────────────────────────────────
 function initNavbar() { //setup the navbar
   const navbar = document.getElementById('navbar'); //connects the element with the navbar
@@ -450,7 +599,7 @@ function initNavbar() { //setup the navbar
     navbar.classList.toggle('scrolled', window.scrollY > 20); // add a shadow to the navbar once the user scrolls down more than 20px
     document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400); //if the user scrolls more than 400px, show the back to the top button
     let current = ''; //variable to store which section is on screen
-    ['hero','countdown','upcoming','results','standings','past'].forEach(id => { //loops every section
+    ['hero','countdown','upcoming','results','standings','drivers','past'].forEach(id => { //loops every section
       const el = document.getElementById(id); //finds the section element with the id
       if (el && window.scrollY >= el.offsetTop - 100) current = id; //if the section and how much the user scrolls down is greater than the top of the page minus 100px, this is where the user is
     });
@@ -980,6 +1129,7 @@ async function loadStandings() { //fetches the driver + constructor standings fr
     driverStandings      = drData?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || []; //goes through the response to get the driver standings array
     constructorStandings = csData?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings || []; //goes through the response to get the constructor standings array
     renderStandings(); //renders whichever standings tab is currently active
+    renderDriverCards(driverStandings); // render the driver cards grid
   } catch(err) { //if there is an error
     console.error('Standings failed:', err); //console.log the error
     document.getElementById('standingsContainer').innerHTML = errorHTML('Could not load standings.'); //print the error in the DOM
