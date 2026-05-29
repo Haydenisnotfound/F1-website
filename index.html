@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  <!-- NAVBAR: the sticky bar at the top with all the links -->
+  <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
       <a href="#" class="nav-logo">
@@ -23,6 +23,7 @@
         <li><a href="#upcoming" class="nav-link">Races</a></li>
         <li><a href="#results" class="nav-link">Results</a></li>
         <li><a href="#standings" class="nav-link">Standings</a></li>
+        <li><a href="#drivers" class="nav-link">Drivers</a></li>
         <li><a href="#past" class="nav-link">Past Races</a></li>
       </ul>
       <div class="nav-actions">
@@ -37,10 +38,10 @@
     </div>
   </nav>
 
-  <!-- HERO: the big full-screen image section at the top -->
+  <!-- HERO -->
   <section class="hero" id="hero">
     <div class="hero-bg">
-      <img src="https://logos-world.net/wp-content/uploads/2023/12/F1-Logo.png" alt="F1 Car" class="hero-img" />
+      <img src="https://logos-world.net/wp-content/uploads/2023/12/F1-Logo.png" alt="F1 Logo" class="hero-img" />
       <div class="hero-overlay"></div>
     </div>
     <div class="hero-content">
@@ -58,7 +59,7 @@
     </div>
   </section>
 
-  <!-- COUNTDOWN: shows the next race and a live ticking timer -->
+  <!-- COUNTDOWN -->
   <section class="section" id="countdown">
     <div class="container">
       <div class="section-header">
@@ -74,7 +75,7 @@
     </div>
   </section>
 
-  <!-- UPCOMING RACES: cards for every race still to come this season -->
+  <!-- UPCOMING RACES -->
   <section class="section section-alt" id="upcoming">
     <div class="container">
       <div class="section-header">
@@ -97,7 +98,7 @@
     </div>
   </section>
 
-  <!-- LATEST RESULTS: podium + top 10 from the most recent race -->
+  <!-- LATEST RESULTS -->
   <section class="section" id="results">
     <div class="container">
       <div class="section-header">
@@ -113,7 +114,7 @@
     </div>
   </section>
 
-  <!-- STANDINGS: driver and constructor championship tables -->
+  <!-- STANDINGS -->
   <section class="section section-alt" id="standings">
     <div class="container">
       <div class="section-header">
@@ -133,15 +134,30 @@
     </div>
   </section>
 
-  <!-- PAST RACES: cards for every race that has already happened -->
-  <!-- JavaScript fills this grid automatically from the API -->
-  <section class="section" id="past">
+  <!-- DRIVERS: grid of all 2026 F1 drivers with clickable cards -->
+  <section class="section" id="drivers">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">2026</span>
+        <h2 class="section-title">Drivers</h2>
+      </div>
+      <!-- JavaScript fills this grid with driver cards -->
+      <div class="drivers-grid" id="driversGrid">
+        <div class="grid-loading">
+          <div class="spinner"></div>
+          <p>Loading drivers…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAST RACES -->
+  <section class="section section-alt" id="past">
     <div class="container">
       <div class="section-header">
         <span class="section-tag">History</span>
         <h2 class="section-title">Past Races</h2>
       </div>
-      <!-- This empty grid gets filled in by JavaScript -->
       <div class="races-grid" id="pastRacesGrid">
         <div class="grid-loading">
           <div class="spinner"></div>
@@ -151,18 +167,14 @@
     </div>
   </section>
 
-  <!-- MODAL POPUP: appears when you click a past race card -->
-  <!-- Normally invisible — JavaScript makes it visible on click -->
+  <!-- MODAL POPUP (shared by past races, weekend schedule and driver detail) -->
   <div class="modal-overlay" id="modalOverlay">
-    <!-- The white card in the middle of the screen -->
     <div class="modal-box">
-      <!-- X button top-right — clicking it closes the popup -->
       <button class="modal-close" id="modalClose">&times;</button>
-      <!-- JavaScript drops the race result table in here -->
       <div id="modalContent">
         <div class="grid-loading">
           <div class="spinner"></div>
-          <p>Loading results…</p>
+          <p>Loading…</p>
         </div>
       </div>
     </div>
@@ -180,7 +192,7 @@
     </div>
   </footer>
 
-  <!-- BACK TO TOP button (bottom-right corner) -->
+  <!-- BACK TO TOP -->
   <button class="back-to-top" id="backToTop" aria-label="Back to top">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
